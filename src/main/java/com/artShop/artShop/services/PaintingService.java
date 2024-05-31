@@ -24,13 +24,7 @@ public class PaintingService {
     }
 
     public Painting createPainting(Painting painting) {
-        Painting paintingToCreate = new Painting();
-        paintingToCreate.setPrice(painting.getPrice());
-        paintingToCreate.setType(painting.getType());
-        paintingToCreate.setLength(painting.getLength());
-        paintingToCreate.setWidth(painting.getWidth());
-        paintingToCreate.setImage(painting.getImage());
-        return paintingRepository.save(paintingToCreate);
+        return paintingRepository.save(painting);
     }
 
     public void deleteById(Long id) {

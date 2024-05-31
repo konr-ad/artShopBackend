@@ -1,6 +1,8 @@
 package com.artShop.artShop.controllers;
 
 import com.artShop.artShop.Utils.ValidationUtils;
+import com.artShop.artShop.enums.PaintingState;
+import com.artShop.artShop.enums.PaintingType;
 import com.artShop.artShop.models.Painting;
 import com.artShop.artShop.services.PaintingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +10,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/paintings")
 public class PaintingController {
 
@@ -32,10 +37,28 @@ public class PaintingController {
         return new ResponseEntity<>(paintingService.findById(id), HttpStatus.OK);
     }
 
-    @PostMapping
-    public ResponseEntity<?> createPainting(@Valid @RequestBody Painting painting, BindingResult result) {
-        ResponseEntity<?> errorMap = ValidationUtils.getResponseEntity(result);
-        if (errorMap != null) return errorMap;
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<?> createPainting(
+            @Valid @RequestParam("type") String type,
+            @RequestParam("name") String name,
+            @RequestParam("state") String state,
+            @RequestParam("length") int length,
+            @RequestParam("width") int width,
+            @RequestParam("price") double price,
+            @RequestPart("image") MultipartFile image) {
+        Painting painting = new Painting();
+        painting.setType(PaintingType.valueOf(type));
+        painting.setName(name);
+        painting.setState(PaintingState.valueOf(state));
+        painting.setLength(length);
+        painting.setWidth(width);
+        painting.setPrice(price);
+        try {
+            painting.setImage(image.getBytes());
+        } catch (IOException e) {
+            return new ResponseEntity<>("Image processing failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         Painting createdPainting = paintingService.createPainting(painting);
         return new ResponseEntity<>(createdPainting, HttpStatus.CREATED);
     }

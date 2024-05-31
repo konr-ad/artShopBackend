@@ -21,6 +21,8 @@ public class Painting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Name is required")
+    private String name;
     @NotNull(message = "Type is required")
     private PaintingType type;
     @NotNull(message = "State is required")
