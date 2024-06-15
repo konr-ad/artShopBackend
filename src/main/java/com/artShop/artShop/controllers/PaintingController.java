@@ -1,8 +1,8 @@
 package com.artShop.artShop.controllers;
 
 import com.artShop.artShop.Utils.ValidationUtils;
-import com.artShop.artShop.enums.PaintingState;
-import com.artShop.artShop.enums.PaintingType;
+import com.artShop.artShop.enums.EPaintingState;
+import com.artShop.artShop.enums.EPaintingType;
 import com.artShop.artShop.models.Painting;
 import com.artShop.artShop.services.PaintingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,9 +47,9 @@ public class PaintingController {
             @RequestParam("price") double price,
             @RequestPart("image") MultipartFile image) {
         Painting painting = new Painting();
-        painting.setType(PaintingType.valueOf(type));
+        painting.setType(EPaintingType.valueOf(type));
         painting.setName(name);
-        painting.setState(PaintingState.valueOf(state));
+        painting.setState(EPaintingState.valueOf(state));
         painting.setLength(length);
         painting.setWidth(width);
         painting.setPrice(price);

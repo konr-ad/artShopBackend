@@ -1,7 +1,7 @@
 package com.artShop.artShop.models;
 
-import com.artShop.artShop.enums.PaintingState;
-import com.artShop.artShop.enums.PaintingType;
+import com.artShop.artShop.enums.EPaintingState;
+import com.artShop.artShop.enums.EPaintingType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,9 +24,9 @@ public class Painting {
     @NotNull(message = "Name is required")
     private String name;
     @NotNull(message = "Type is required")
-    private PaintingType type;
+    private EPaintingType type;
     @NotNull(message = "State is required")
-    private PaintingState state;
+    private EPaintingState state;
     @Min(value = 1, message = "Length should be at least 1")
     private int length;
     @Min(value = 1, message = "Width should be at least 1")
