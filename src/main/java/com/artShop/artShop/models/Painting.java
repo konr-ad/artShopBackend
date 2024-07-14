@@ -34,6 +34,8 @@ public class Painting {
     @Positive(message = "Price should be positive")
     private double price;
 
+    private String description;
+
     @Lob
     private byte[] image;
 }
