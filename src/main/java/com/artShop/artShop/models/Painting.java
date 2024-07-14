@@ -33,7 +33,8 @@ public class Painting {
     private int width;
     @Positive(message = "Price should be positive")
     private double price;
-
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Lob
