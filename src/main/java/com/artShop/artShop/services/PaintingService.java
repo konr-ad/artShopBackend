@@ -1,7 +1,7 @@
 package com.artShop.artShop.services;
 
-import com.artShop.artShop.enums.PaintingState;
-import com.artShop.artShop.enums.PaintingType;
+import com.artShop.artShop.enums.EPaintingState;
+import com.artShop.artShop.enums.EPaintingType;
 import com.artShop.artShop.models.Painting;
 import com.artShop.artShop.repositories.PaintingRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -57,10 +57,10 @@ public class PaintingService {
 
     public Painting createPainting(String type, String name, String description, String state, int length, int width, double price, MultipartFile image) throws IOException {
         Painting painting = new Painting();
-        painting.setType(PaintingType.valueOf(type));
+        painting.setType(EPaintingType.valueOf(type));
         painting.setName(name);
         painting.setDescription(description);
-        painting.setState(PaintingState.valueOf(state));
+        painting.setState(EPaintingState.valueOf(state));
         painting.setLength(length);
         painting.setWidth(width);
         painting.setPrice(price);
