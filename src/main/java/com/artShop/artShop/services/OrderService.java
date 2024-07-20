@@ -3,6 +3,8 @@ package com.artShop.artShop.services;
 import com.artShop.artShop.models.payu.Order;
 import com.artShop.artShop.models.payu.OrderItem;
 import com.artShop.artShop.repositories.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -37,6 +39,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+
     @Autowired
     public OrderService(OrderRepository orderRepository, RestTemplate restTemplate) {
         this.orderRepository = orderRepository;
@@ -59,13 +63,13 @@ public class OrderService {
         return response.getBody().get("access_token").toString();
     }
 
-    public ResponseEntity<Map> createOrderInPayU(Order order, String token) {
+    public Map<String, Object> createOrderInPayU(Order order, String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(token);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("continueUrl", "http://www.bialkowskaismail.pl");
+        body.put("continueUrl", "http://25.53.71.208:4200/thankyou");
         body.put("notifyUrl", "http://25.53.71.208:4200/notify");
         body.put("customerIp", "127.0.0.1");
         body.put("merchantPosId", "482430");
@@ -94,9 +98,9 @@ public class OrderService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        return restTemplate.postForEntity(orderUrl, request, Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(orderUrl, request, Map.class);
+        return response.getBody();
     }
-
 
     public Order processOrder(Order order) {
         // Save the order to the database first
@@ -106,11 +110,16 @@ public class OrderService {
         String token = getAuthToken();
 
         // Create order in PayU
-        ResponseEntity<Map> responseEntity = createOrderInPayU(savedOrder, token);
+        Map<String, Object> response = createOrderInPayU(savedOrder, token);
 
-        // Handle response as needed, e.g., update order status based on PayU response
+        // Extract and update necessary information from the response
+        savedOrder.setPayuOrderId((String) response.get("orderId"));
+        savedOrder.setRedirectUri((String) response.get("redirectUri"));
+        savedOrder.setStatus((String) ((Map) response.get("status")).get("statusCode"));
 
-        // Return the saved order
+        // Save updated order to the database
+        saveOrder(savedOrder);
+
         return savedOrder;
     }
 

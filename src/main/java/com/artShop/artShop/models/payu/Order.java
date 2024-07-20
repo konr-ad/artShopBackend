@@ -21,21 +21,52 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 255)
     private String email;
+
+    @Column(length = 255)
     private String firstName;
+
+    @Column(length = 255)
     private String lastName;
+
+    @Column(length = 255)
     private String country;
+
+    @Column(length = 255)
     private String state;
+
+    @Column(length = 255)
     private String address;
+
+    @Column(length = 255)
     private String apartmentNumber;
+
+    @Column(length = 255)
     private String city;
+
+    @Column(length = 255)
     private String zip;
+
+    @Column(length = 255)
     private String description;
+
+    @Column(length = 255)
     private String currencyCode;
+
+    @Column(length = 255)
     private String totalAmount;
+
+    @Column(length = 255)
     private String extOrderId;
+
+    @Column(length = 255)
     private String status;
+
+    @Column(length = 2000)
     private String redirectUri;
+
+    @Column(length = 255)
     private String payuOrderId;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "order")

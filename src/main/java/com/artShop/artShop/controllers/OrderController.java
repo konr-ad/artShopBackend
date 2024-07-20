@@ -1,9 +1,13 @@
 package com.artShop.artShop.controllers;
+
 import com.artShop.artShop.models.payu.Order;
 import com.artShop.artShop.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -17,9 +21,10 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
+    public ResponseEntity<Map<String, String>> createOrder(@RequestBody Order order) {
         Order processedOrder = orderService.processOrder(order);
-        return ResponseEntity.ok(processedOrder);
+        Map<String, String> response = new HashMap<>();
+        response.put("redirectUri", processedOrder.getRedirectUri());
+        return ResponseEntity.ok(response);
     }
 }
-
