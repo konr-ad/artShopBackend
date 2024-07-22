@@ -2,6 +2,7 @@ package com.artShop.artShop.models;
 
 import com.artShop.artShop.enums.EPaintingState;
 import com.artShop.artShop.enums.EPaintingType;
+import com.artShop.artShop.models.payu.OrderItem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "painting")
@@ -27,10 +30,6 @@ public class Painting {
     private EPaintingType type;
     @NotNull(message = "State is required")
     private EPaintingState state;
-    @Min(value = 1, message = "Length should be at least 1")
-    private int length;
-    @Min(value = 1, message = "Width should be at least 1")
-    private int width;
     @Positive(message = "Price should be positive")
     private double price;
     @Lob
@@ -39,4 +38,7 @@ public class Painting {
 
     @Lob
     private byte[] image;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "painting")
+    private List<AdditionalImage> additionalImages = new ArrayList<>();
 }

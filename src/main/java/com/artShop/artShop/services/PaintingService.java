@@ -27,9 +27,6 @@ public class PaintingService {
                 .orElseThrow(() -> new EntityNotFoundException("Painting with id: " + id + " not found"));
     }
 
-    public Painting createPainting(Painting painting) {
-        return paintingRepository.save(painting);
-    }
 
     public void deleteById(Long id) {
         findById(id);
@@ -46,8 +43,6 @@ public class PaintingService {
         existingPainting.setState(updatedPainting.getState());
         existingPainting.setType(updatedPainting.getType());
         existingPainting.setPrice(updatedPainting.getPrice());
-        existingPainting.setLength(updatedPainting.getLength());
-        existingPainting.setWidth(updatedPainting.getWidth());
         existingPainting.setDescription(updatedPainting.getDescription());
     }
 
@@ -55,14 +50,12 @@ public class PaintingService {
         return paintingRepository.findAll();
     }
 
-    public Painting createPainting(String type, String name, String description, String state, int length, int width, double price, MultipartFile image) throws IOException {
+    public Painting createPainting(String type, String name, String description, String state, double price, MultipartFile image) throws IOException {
         Painting painting = new Painting();
         painting.setType(EPaintingType.valueOf(type));
         painting.setName(name);
         painting.setDescription(description);
         painting.setState(EPaintingState.valueOf(state));
-        painting.setLength(length);
-        painting.setWidth(width);
         painting.setPrice(price);
         painting.setImage(image.getBytes());
 

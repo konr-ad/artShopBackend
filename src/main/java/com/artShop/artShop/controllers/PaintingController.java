@@ -1,7 +1,9 @@
 package com.artShop.artShop.controllers;
 
 import com.artShop.artShop.Utils.ValidationUtils;
+import com.artShop.artShop.models.AdditionalImage;
 import com.artShop.artShop.models.Painting;
+import com.artShop.artShop.services.AdditionalImageService;
 import com.artShop.artShop.services.PaintingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -19,10 +22,12 @@ import java.io.IOException;
 public class PaintingController {
 
     private final PaintingService paintingService;
+    private final AdditionalImageService additionalImageService;
 
     @Autowired
-    public PaintingController(PaintingService paintingService) {
+    public PaintingController(PaintingService paintingService, AdditionalImageService additionalImageService) {
         this.paintingService = paintingService;
+        this.additionalImageService = additionalImageService;
     }
 
     @GetMapping
@@ -41,12 +46,14 @@ public class PaintingController {
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("state") String state,
-            @RequestParam("length") int length,
-            @RequestParam("width") int width,
             @RequestParam("price") double price,
-            @RequestPart("image") MultipartFile image) {
+            @RequestPart("image") MultipartFile image,
+            @RequestPart(value = "additionalImages", required = false) MultipartFile[] additionalImages) {
         try {
-            Painting createdPainting = paintingService.createPainting(type, name, description, state, length, width, price, image);
+            Painting createdPainting = paintingService.createPainting(type, name, description, state, price, image);
+            if (additionalImages != null && additionalImages.length > 0) {
+                additionalImageService.uploadAdditionalImages(createdPainting.getId(), additionalImages);
+            }
             return new ResponseEntity<>(createdPainting, HttpStatus.CREATED);
         } catch (IOException e) {
             return new ResponseEntity<>("Image processing failed", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -59,10 +66,21 @@ public class PaintingController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping
-    public ResponseEntity<?> updatePainting(@Valid @RequestBody Painting painting, BindingResult result) {
+    @PutMapping(consumes = "multipart/form-data")
+    public ResponseEntity<?> updatePainting(@Valid @RequestParam("painting") Painting painting, @RequestPart(value = "additionalImages", required = false) MultipartFile[] additionalImages, BindingResult result) {
         ResponseEntity<?> errorMap = ValidationUtils.getResponseEntity(result);
         if (errorMap != null) return errorMap;
-        return new ResponseEntity<>(paintingService.update(painting), HttpStatus.OK);
+
+        try {
+            Painting updatedPainting = paintingService.update(painting);
+
+            if (additionalImages != null && additionalImages.length > 0) {
+                additionalImageService.uploadAdditionalImages(updatedPainting.getId(), additionalImages);
+            }
+
+            return new ResponseEntity<>(updatedPainting, HttpStatus.OK);
+        } catch (IOException e) {
+            return new ResponseEntity<>("Image processing failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
