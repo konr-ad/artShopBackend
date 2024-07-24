@@ -47,6 +47,26 @@ public class OrderService {
         this.restTemplate = restTemplate;
     }
 
+    public Order processOrder(Order order) {
+        // Save the order to the database first
+        Order savedOrder = saveOrder(order);
+
+        // Get the authorization token
+        String token = getAuthToken();
+
+        // Create order in PayU
+        Map<String, Object> response = createOrderInPayU(savedOrder, token);
+
+        // Extract and update necessary information from the response
+        savedOrder.setPayuOrderId((String) response.get("orderId"));
+        savedOrder.setRedirectUri((String) response.get("redirectUri"));
+        savedOrder.setPaymentStatus((String) ((Map) response.get("status")).get("statusCode"));
+
+        // Save updated order to the database
+        saveOrder(savedOrder);
+
+        return savedOrder;
+    }
     public String getAuthToken() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -102,28 +122,23 @@ public class OrderService {
         return response.getBody();
     }
 
-    public Order processOrder(Order order) {
-        // Save the order to the database first
-        Order savedOrder = saveOrder(order);
-
-        // Get the authorization token
-        String token = getAuthToken();
-
-        // Create order in PayU
-        Map<String, Object> response = createOrderInPayU(savedOrder, token);
-
-        // Extract and update necessary information from the response
-        savedOrder.setPayuOrderId((String) response.get("orderId"));
-        savedOrder.setRedirectUri((String) response.get("redirectUri"));
-        savedOrder.setStatus((String) ((Map) response.get("status")).get("statusCode"));
-
-        // Save updated order to the database
-        saveOrder(savedOrder);
-
-        return savedOrder;
-    }
 
     public Order saveOrder(Order order) {
+        Order savedOrder = new Order();
+        savedOrder.setEmail(order.getEmail());
+        savedOrder.setFirstName(order.getFirstName());
+        savedOrder.setLastName(order.getLastName());
+        savedOrder.setCountry(order.getCountry());
+        savedOrder.setState(order.getState());
+        savedOrder.setAddress(order.getAddress());
+        savedOrder.setApartmentNumber(order.getApartmentNumber());
+        savedOrder.setCity(order.getCity());
+        savedOrder.setZip(order.getZip());
+        savedOrder.setDescription(order.getDescription());
+        savedOrder.setCurrencyCode(order.getCurrencyCode());
+        savedOrder.setTotalAmount(order.getTotalAmount());
+        savedOrder.setItems(order.getItems());
+
         return orderRepository.save(order);
     }
 }

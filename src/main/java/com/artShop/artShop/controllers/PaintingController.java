@@ -1,7 +1,6 @@
 package com.artShop.artShop.controllers;
 
 import com.artShop.artShop.Utils.ValidationUtils;
-import com.artShop.artShop.models.AdditionalImage;
 import com.artShop.artShop.models.Painting;
 import com.artShop.artShop.services.AdditionalImageService;
 import com.artShop.artShop.services.PaintingService;
@@ -14,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")

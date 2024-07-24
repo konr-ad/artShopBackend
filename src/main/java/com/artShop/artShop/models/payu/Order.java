@@ -61,7 +61,7 @@ public class Order {
     private String extOrderId;
 
     @Column(length = 255)
-    private String status;
+    private String paymentStatus;
 
     @Column(length = 2000)
     private String redirectUri;
