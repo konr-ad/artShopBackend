@@ -60,8 +60,9 @@ public class OrderService {
         // Extract and update necessary information from the response
         savedOrder.setPayuOrderId((String) response.get("orderId"));
         savedOrder.setRedirectUri((String) response.get("redirectUri"));
-        savedOrder.setPaymentStatus((String) ((Map) response.get("status")).get("statusCode"));
-
+        savedOrder.setPaymentStatus((String) ((Map) response.get("status")).get("statusCode")); //to nie jest paymentStatus
+        logger.info("response.get(\"status\"): {}", response.get("status"));
+        logger.info("response.get(\"status\"): {}", response.get("statusCode"));
         // Save updated order to the database
         saveOrder(savedOrder);
 
@@ -140,5 +141,9 @@ public class OrderService {
         savedOrder.setItems(order.getItems());
 
         return orderRepository.save(order);
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
     }
 }
