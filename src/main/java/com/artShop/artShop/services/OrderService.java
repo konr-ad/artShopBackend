@@ -19,6 +19,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,7 +64,7 @@ public class OrderService {
             }
         }
         order.setCustomer(customer);
-
+        order.setCreationDate(LocalDateTime.now());
 //        if (order.getPaintingIds() != null && !order.getPaintingIds().isEmpty()) {
 //            List<Painting> paintings = paintingRepository.findAllById(order.getPaintingIds());
 //            paintings.forEach(painting -> painting.setOrder(order));

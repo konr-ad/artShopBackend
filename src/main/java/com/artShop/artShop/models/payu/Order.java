@@ -2,13 +2,14 @@ package com.artShop.artShop.models.payu;
 
 import com.artShop.artShop.models.Customer;
 import com.artShop.artShop.models.Painting;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.FetchType;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "orders")
 public class Order {
 
@@ -44,10 +46,12 @@ public class Order {
     @Column(length = 255)
     private String payuOrderId;
 
+    private LocalDateTime creationDate;
+
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Painting> paintings = new ArrayList<>();
 }
