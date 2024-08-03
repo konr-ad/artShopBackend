@@ -2,12 +2,12 @@ package com.artShop.artShop.models;
 
 import com.artShop.artShop.enums.EPaintingState;
 import com.artShop.artShop.enums.EPaintingType;
-import com.artShop.artShop.models.payu.OrderItem;
+import com.artShop.artShop.models.payu.Order;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import javax.validation.constraints.Min;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.util.ArrayList;
@@ -36,9 +36,16 @@ public class Painting {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    private String quantity;
+
     @Lob
     private byte[] image;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "painting")
     private List<AdditionalImage> additionalImages = new ArrayList<>();
+
 }

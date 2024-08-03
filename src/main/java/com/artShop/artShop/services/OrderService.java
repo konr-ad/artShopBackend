@@ -1,7 +1,10 @@
 package com.artShop.artShop.services;
 
+import com.artShop.artShop.enums.EPaintingType;
+import com.artShop.artShop.models.Customer;
+import com.artShop.artShop.models.Painting;
 import com.artShop.artShop.models.payu.Order;
-import com.artShop.artShop.models.payu.OrderItem;
+import com.artShop.artShop.repositories.CustomerRepository;
 import com.artShop.artShop.repositories.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,23 +41,40 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
+    private final CustomerRepository customerRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, RestTemplate restTemplate) {
+    public OrderService(OrderRepository orderRepository, RestTemplate restTemplate, CustomerRepository customerRepository) {
         this.orderRepository = orderRepository;
         this.restTemplate = restTemplate;
+        this.customerRepository = customerRepository;
     }
 
     public Order processOrder(Order order) {
-        // Save the order to the database first
-        Order savedOrder = saveOrder(order);
+        Customer customer = order.getCustomer();
+        if (customer != null && (customer.getId() == null || !customerRepository.existsById(customer.getId()))) {
+            Customer existingCustomer = customerRepository.findByEmail(customer.getEmail());
+            if (existingCustomer != null) {
+                customer = existingCustomer;
+            } else {
+                customer = customerRepository.save(customer);
+            }
+        }
+        order.setCustomer(customer);
 
-        // Get the authorization token
+//        if (order.getPaintingIds() != null && !order.getPaintingIds().isEmpty()) {
+//            List<Painting> paintings = paintingRepository.findAllById(order.getPaintingIds());
+//            paintings.forEach(painting -> painting.setOrder(order));
+//            order.setPaintings(paintings);
+//        }
+
+        // Save the order
+        Order savedOrder = orderRepository.save(order);
+
+        // Continue with PayU integration
         String token = getAuthToken();
-
-        // Create order in PayU
         Map<String, Object> response = createOrderInPayU(savedOrder, token);
 
         // Extract and update necessary information from the response
@@ -64,10 +84,9 @@ public class OrderService {
         logger.info("response.get(\"status\"): {}", response.get("status"));
         logger.info("response.get(\"status\"): {}", response.get("statusCode"));
         // Save updated order to the database
-        saveOrder(savedOrder);
-
-        return savedOrder;
+        return orderRepository.save(savedOrder);
     }
+
     public String getAuthToken() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -100,18 +119,22 @@ public class OrderService {
         body.put("extOrderId", order.getExtOrderId());
 
         Map<String, String> buyer = new HashMap<>();
-        buyer.put("email", order.getEmail());
-        buyer.put("firstName", order.getFirstName());
-        buyer.put("lastName", order.getLastName());
+        buyer.put("email", order.getCustomer().getEmail());
+        buyer.put("firstName", order.getCustomer().getFirstName());
+        buyer.put("lastName", order.getCustomer().getLastName());
         body.put("buyer", buyer);
 
         List<Map<String, String>> products = new ArrayList<>();
-        if (order.getItems() != null) {
-            for (OrderItem item : order.getItems()) {
+        if (order.getPaintings() != null) {
+            for (Painting painting : order.getPaintings()) {
+                String quantity = "1";
                 Map<String, String> product = new HashMap<>();
-                product.put("name", item.getName());
-                product.put("unitPrice", item.getUnitPrice());
-                product.put("quantity", item.getQuantity());
+                product.put("name", painting.getName());
+                product.put("unitPrice", String.valueOf((int) Math.round(painting.getPrice() * 100)));
+                if (painting.getType().equals(EPaintingType.PRINT)) {
+                    quantity = painting.getQuantity();
+                }
+                product.put("quantity", quantity);
                 products.add(product);
             }
         }
@@ -121,26 +144,6 @@ public class OrderService {
 
         ResponseEntity<Map> response = restTemplate.postForEntity(orderUrl, request, Map.class);
         return response.getBody();
-    }
-
-
-    public Order saveOrder(Order order) {
-        Order savedOrder = new Order();
-        savedOrder.setEmail(order.getEmail());
-        savedOrder.setFirstName(order.getFirstName());
-        savedOrder.setLastName(order.getLastName());
-        savedOrder.setCountry(order.getCountry());
-        savedOrder.setState(order.getState());
-        savedOrder.setAddress(order.getAddress());
-        savedOrder.setApartmentNumber(order.getApartmentNumber());
-        savedOrder.setCity(order.getCity());
-        savedOrder.setZip(order.getZip());
-        savedOrder.setDescription(order.getDescription());
-        savedOrder.setCurrencyCode(order.getCurrencyCode());
-        savedOrder.setTotalAmount(order.getTotalAmount());
-        savedOrder.setItems(order.getItems());
-
-        return orderRepository.save(order);
     }
 
     public List<Order> getAllOrders() {

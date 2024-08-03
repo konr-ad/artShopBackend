@@ -1,5 +1,7 @@
 package com.artShop.artShop.models.payu;
 
+import com.artShop.artShop.models.Customer;
+import com.artShop.artShop.models.Painting;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.*;
@@ -22,33 +24,6 @@ public class Order {
     private Long id;
 
     @Column(length = 255)
-    private String email;
-
-    @Column(length = 255)
-    private String firstName;
-
-    @Column(length = 255)
-    private String lastName;
-
-    @Column(length = 255)
-    private String country;
-
-    @Column(length = 255)
-    private String state;
-
-    @Column(length = 255)
-    private String address;
-
-    @Column(length = 255)
-    private String apartmentNumber;
-
-    @Column(length = 255)
-    private String city;
-
-    @Column(length = 255)
-    private String zip;
-
-    @Column(length = 255)
     private String description;
 
     @Column(length = 255)
@@ -69,7 +44,10 @@ public class Order {
     @Column(length = 255)
     private String payuOrderId;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "order")
-    private List<OrderItem> items = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "order")
+    private List<Painting> paintings = new ArrayList<>();
 }
