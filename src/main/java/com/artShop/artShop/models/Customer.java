@@ -28,24 +28,6 @@ public class Customer {
     @Column(length = 255)
     private String lastName;
 
-    @Column(length = 255)
-    private String country;
-
-    @Column(length = 255)
-    private String state;
-
-    @Column(length = 255)
-    private String address;
-
-    @Column(length = 255)
-    private String apartmentNumber;
-
-    @Column(length = 255)
-    private String city;
-
-    @Column(length = 255)
-    private String zip;
-
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();
 

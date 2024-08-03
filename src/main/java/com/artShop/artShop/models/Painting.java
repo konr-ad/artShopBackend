@@ -3,6 +3,8 @@ package com.artShop.artShop.models;
 import com.artShop.artShop.enums.EPaintingState;
 import com.artShop.artShop.enums.EPaintingType;
 import com.artShop.artShop.models.payu.Order;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +20,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Painting {
 
     @Id
@@ -41,7 +44,7 @@ public class Painting {
     @Lob
     private byte[] image;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
 
