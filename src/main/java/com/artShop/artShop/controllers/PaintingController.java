@@ -43,12 +43,11 @@ public class PaintingController {
             @Valid @RequestParam("type") String type,
             @RequestParam("name") String name,
             @RequestParam("description") String description,
-            @RequestParam("state") String state,
             @RequestParam("price") double price,
             @RequestPart("image") MultipartFile image,
             @RequestPart(value = "additionalImages", required = false) MultipartFile[] additionalImages) {
         try {
-            Painting createdPainting = paintingService.createPainting(type, name, description, state, price, image);
+            Painting createdPainting = paintingService.createPainting(type, name, description, price, image);
             if (additionalImages != null && additionalImages.length > 0) {
                 additionalImageService.uploadAdditionalImages(createdPainting.getId(), additionalImages);
             }

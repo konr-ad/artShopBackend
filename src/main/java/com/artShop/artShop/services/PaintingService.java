@@ -50,12 +50,11 @@ public class PaintingService {
         return paintingRepository.findAll();
     }
 
-    public Painting createPainting(String type, String name, String description, String state, double price, MultipartFile image) throws IOException {
+    public Painting createPainting(String type, String name, String description, double price, MultipartFile image) throws IOException {
         Painting painting = new Painting();
         painting.setType(EPaintingType.valueOf(type));
         painting.setName(name);
         painting.setDescription(description);
-        painting.setState(EPaintingState.valueOf(state));
         painting.setPrice(price);
         painting.setImage(image.getBytes());
 

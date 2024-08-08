@@ -31,7 +31,6 @@ public class Painting {
     private String name;
     @NotNull(message = "Type is required")
     private EPaintingType type;
-    @NotNull(message = "State is required")
     private EPaintingState state;
     @Positive(message = "Price should be positive")
     private double price;
