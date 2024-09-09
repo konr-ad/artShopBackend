@@ -4,6 +4,7 @@ import com.artShop.artShop.enums.EPaintingState;
 import com.artShop.artShop.enums.EPaintingType;
 import com.artShop.artShop.models.payu.Order;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@JsonIgnoreProperties({"additionalImages"})
 public class Painting {
 
     @Id
@@ -48,6 +50,7 @@ public class Painting {
     private Order order;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "painting")
+    @JsonIgnoreProperties("painting")
     private List<AdditionalImage> additionalImages = new ArrayList<>();
 
 }
