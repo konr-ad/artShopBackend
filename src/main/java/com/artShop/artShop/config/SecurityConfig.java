@@ -1,5 +1,6 @@
 package com.artShop.artShop.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,6 +9,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${frontend.ip.address}")
+    private String frontendIpAddress;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -18,7 +22,7 @@ public class SecurityConfig {
                 )
                 .headers(headers ->
                         headers.contentSecurityPolicy(csp ->
-                                csp.policyDirectives("default-src 'self'; img-src 'self' http://localhost:4200;")
+                                csp.policyDirectives(STR."default-src 'self'; img-src 'self' \{frontendIpAddress};")
                         )
                 );
         return http.build();
