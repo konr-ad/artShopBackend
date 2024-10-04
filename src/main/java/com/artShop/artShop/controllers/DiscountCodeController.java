@@ -23,7 +23,7 @@ public class DiscountCodeController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllDIscountCodes() {
+    public ResponseEntity<?> getAllDiscountCodes() {
         List<DiscountCode> discountCodes = discountCodeService.findAll();
         return new ResponseEntity<>(discountCodes, HttpStatus.OK);
     }

@@ -25,6 +25,7 @@ public class DiscountCode {
     private int usageLimit;
     private int timesUsed;
     private boolean isActive;
-    private LocalDateTime expirationDate;
+    private LocalDateTime validTo;
+    private LocalDateTime validFrom;
 
 }

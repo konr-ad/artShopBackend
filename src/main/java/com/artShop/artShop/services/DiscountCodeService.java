@@ -27,23 +27,24 @@ public class DiscountCodeService {
         DiscountCode discountCode = discountCodeRepository.findByCode(request.getCode())
                 .orElseThrow(() -> new EntityNotFoundException("Code not found"));
 
-        if (!discountCode.isActive()) {
-            return new DiscountCodeResponse(false, "Discount code is inactive", BigDecimal.ZERO);
-        }
-
-        if (discountCode.getExpirationDate() != null && discountCode.getExpirationDate().isBefore(LocalDateTime.now())) {
-            return new DiscountCodeResponse(false, "Discount code has expired", BigDecimal.ZERO);
-        }
-
-        if (request.getOrderValue().compareTo(discountCode.getMinimumOrderValue()) < 0) {
-            return new DiscountCodeResponse(false, "Order value is less than the minimum required for this discount code", BigDecimal.ZERO);
-        }
-
-        if (discountCode.getTimesUsed() >= discountCode.getUsageLimit()) {
-            return new DiscountCodeResponse(false, "Discount code usage limit reached", BigDecimal.ZERO);
-        }
-
-        return new DiscountCodeResponse(true, "Discount code is valid", discountCode.getDiscountValue());
+//        if (!discountCode.isActive()) {
+//            return new DiscountCodeResponse(false, "Discount code is inactive", BigDecimal.ZERO);
+//        }
+//
+//        if (discountCode.getExpirationDate() != null && discountCode.getExpirationDate().isBefore(LocalDateTime.now())) {
+//            return new DiscountCodeResponse(false, "Discount code has expired", BigDecimal.ZERO);
+//        }
+//
+//        if (request.getOrderValue().compareTo(discountCode.getMinimumOrderValue()) < 0) {
+//            return new DiscountCodeResponse(false, "Order value is less than the minimum required for this discount code", BigDecimal.ZERO);
+//        }
+//
+//        if (discountCode.getTimesUsed() >= discountCode.getUsageLimit()) {
+//            return new DiscountCodeResponse(false, "Discount code usage limit reached", BigDecimal.ZERO);
+//        }
+//
+//        return new DiscountCodeResponse(true, "Discount code is valid", discountCode.getDiscountValue());
+        return null;
     }
 
     public void incrementUsage(DiscountCode discountCode) {
