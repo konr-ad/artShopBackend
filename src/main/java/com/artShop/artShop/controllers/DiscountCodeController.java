@@ -50,4 +50,10 @@ public class DiscountCodeController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteAllDiscountCodesById(@RequestBody List<Long> ids) {
+        discountCodeService.deleteById(ids);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 }

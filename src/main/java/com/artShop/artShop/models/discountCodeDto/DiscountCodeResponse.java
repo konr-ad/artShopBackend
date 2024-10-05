@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DiscountCodeResponse {
+    private Long id;
     private String code;
     private boolean valid;
     private String message;

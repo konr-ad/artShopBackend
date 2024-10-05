@@ -63,4 +63,8 @@ public class DiscountCodeService {
     public void deleteById(Long id) {
         discountCodeRepository.deleteById(id);
     }
+
+    public void deleteById(List<Long> ids) {
+        discountCodeRepository.deleteAllById(ids);
+    }
 }
