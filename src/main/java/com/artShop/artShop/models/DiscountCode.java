@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Data
@@ -25,7 +25,7 @@ public class DiscountCode {
     private int usageLimit;
     private int timesUsed;
     private boolean isActive;
-    private LocalDateTime validTo;
-    private LocalDateTime validFrom;
+    private LocalDate validTo;
+    private LocalDate validFrom;
 
 }
