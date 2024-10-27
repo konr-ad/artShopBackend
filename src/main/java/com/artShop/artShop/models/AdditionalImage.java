@@ -1,5 +1,6 @@
 package com.artShop.artShop.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -11,12 +12,10 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "additional_image")
+@Table(name = "additional_images")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIgnoreProperties({"image"})
 public class AdditionalImage {
 
     @Id
@@ -31,6 +30,6 @@ public class AdditionalImage {
 
     @ManyToOne
     @JoinColumn(name = "painting_id")
-    @JsonIgnoreProperties("additionalImages")
+    @JsonBackReference
     private Painting painting;
 }

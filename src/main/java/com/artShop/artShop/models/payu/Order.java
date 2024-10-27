@@ -2,12 +2,15 @@ package com.artShop.artShop.models.payu;
 
 import com.artShop.artShop.models.Customer;
 import com.artShop.artShop.models.Painting;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,7 +20,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "orders")
 public class Order {
 
@@ -46,12 +48,25 @@ public class Order {
     @Column(length = 255)
     private String payuOrderId;
 
+    @CreationTimestamp
     private LocalDateTime creationDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "customer_id")
+    @JsonBackReference
     private Customer customer;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Painting> paintings = new ArrayList<>();
+
+    public void addPainting(Painting painting) {
+        this.paintings.add(painting);
+        painting.setOrder(this);
+    }
+
+    public void removePainting(Painting painting) {
+        this.paintings.remove(painting);
+        painting.setOrder(null);
+    }
 }

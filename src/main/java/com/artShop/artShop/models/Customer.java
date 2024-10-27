@@ -3,6 +3,7 @@ package com.artShop.artShop.models;
 import com.artShop.artShop.models.payu.Order;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIgnoreProperties({"orders"})
 @Table(name = "customer")
 public class Customer {
     @Id
@@ -51,9 +50,17 @@ public class Customer {
     @Column(length = 255)
     private String zip;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
 
+    public void addOrder(Order order) {
+        this.orders.add(order);
+        order.setCustomer(this);
+    }
 
-
+    public void removeOrder(Order order) {
+        this.orders.remove(order);
+        order.setCustomer(null);
+    }
 }

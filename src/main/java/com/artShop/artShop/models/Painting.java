@@ -3,9 +3,7 @@ package com.artShop.artShop.models;
 import com.artShop.artShop.enums.EPaintingState;
 import com.artShop.artShop.enums.EPaintingType;
 import com.artShop.artShop.models.payu.Order;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,12 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "painting")
+@Table(name = "paintings")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIgnoreProperties({"additionalImages"})
 public class Painting {
 
     @Id
@@ -45,12 +41,22 @@ public class Painting {
     @Lob
     private byte[] image;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private Order order;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "painting")
-    @JsonIgnoreProperties("painting")
+    @OneToMany(mappedBy = "painting", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<AdditionalImage> additionalImages = new ArrayList<>();
 
+    public void addAdditionalImage(AdditionalImage additionalImage) {
+        additionalImages.add(additionalImage);
+        additionalImage.setPainting(this);
+    }
+
+    public void removeAdditionalImage(AdditionalImage additionalImage) {
+        additionalImages.remove(additionalImage);
+        additionalImage.setPainting(null);
+    }
 }

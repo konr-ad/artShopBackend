@@ -55,21 +55,30 @@ public class OrderService {
 
     public Order processOrder(Order order) {
         Customer customer = order.getCustomer();
-        if (customer != null && (customer.getId() == null || !customerRepository.existsById(customer.getId()))) {
-            Customer existingCustomer = customerRepository.findByEmail(customer.getEmail());
-            if (existingCustomer != null) {
-                customer = existingCustomer;
+        if (customer != null) {
+            if (customer.getId() == null || !customerRepository.existsById(customer.getId())) {
+                Customer existingCustomer = customerRepository.findByEmail(customer.getEmail());
+                if (existingCustomer != null) {
+                    customer = existingCustomer;
+                } else {
+                    customer.addOrder(order);
+                    customer = customerRepository.save(customer);
+                }
             } else {
-                customer = customerRepository.save(customer);
+                customer.addOrder(order);
             }
         }
         order.setCustomer(customer);
-        order.setCreationDate(LocalDateTime.now());
-//        if (order.getPaintingIds() != null && !order.getPaintingIds().isEmpty()) {
-//            List<Painting> paintings = paintingRepository.findAllById(order.getPaintingIds());
-//            paintings.forEach(painting -> painting.setOrder(order));
-//            order.setPaintings(paintings);
-//        }
+
+        if (order.getPaintings() != null && !order.getPaintings().isEmpty()) {
+            List<Painting> paintings = order.getPaintings();
+
+            // Ensure that each painting has the correct order set
+            paintings.forEach(painting -> painting.setOrder(order));
+
+            // Set the paintings to the order
+            order.setPaintings(paintings);
+        }
 
         // Save the order
         Order savedOrder = orderRepository.save(order);
@@ -110,8 +119,8 @@ public class OrderService {
         headers.setBearerAuth(token);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("continueUrl", "http://25.53.71.208:4200/thankyou");
-        body.put("notifyUrl", "http://25.53.71.208:4200/notify");
+        body.put("continueUrl", "http://localhost:4200/thankyou");
+        body.put("notifyUrl", "http://localhost:4200/notify");
         body.put("customerIp", "127.0.0.1");
         body.put("merchantPosId", "482430");
         body.put("description", order.getDescription());
