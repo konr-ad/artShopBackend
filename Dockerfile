@@ -1,14 +1,13 @@
-# Use Amazon Corretto 22 as the base image
-FROM amazoncorretto:22-alpine
-
-# Set the working directory inside the container
+# Multi-stage build for smaller, reproducible image
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY pom.xml .
+RUN mvn -q -e -DskipTests dependency:go-offline
+COPY src ./src
+RUN mvn -q -DskipTests package
 
-# Copy the pre-built JAR file from the local machine to the container
-COPY target/artShop-1.0.0.jar /app/artShop-1.0.0.jar
-
-# Expose the port that your Spring Boot app will run on
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Define the entrypoint to run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "/app/artShop-1.0.0.jar"]
+ENTRYPOINT ["java","-jar","/app/app.jar"]
