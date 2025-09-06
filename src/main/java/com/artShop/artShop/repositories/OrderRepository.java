@@ -1,15 +1,27 @@
 package com.artShop.artShop.repositories;
 
 import com.artShop.artShop.models.payu.Order;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @EntityGraph(attributePaths = {"customer", "paintings"})
-    List<Order> findAll(); // This will ensure that customer and paintings are fetched along with orders
+    @EntityGraph(attributePaths = {"customer", "items"})
+    Page<Order> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"customer", "items"})
+    Optional<Order> findById(Long id);
+
+    @EntityGraph(attributePaths = {"customer", "items"})
+    Page<Order> findByContactEmailIgnoreCase(String contactEmail, Pageable pageable);
+
+    Optional<Order> findByExtOrderId(String extOrderId);
+    Optional<Order> findByPayuOrderId(String payuOrderId);
 }
