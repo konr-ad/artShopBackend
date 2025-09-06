@@ -1,24 +1,17 @@
 package com.artShop.artShop.models;
 
-import com.artShop.artShop.models.payu.Order;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.artShop.artShop.models.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Setter;
 
 @Entity
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 @Table(name = "customer")
-public class Customer {
+public class Customer extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -49,18 +42,4 @@ public class Customer {
 
     @Column(length = 255)
     private String zip;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<Order> orders = new ArrayList<>();
-
-    public void addOrder(Order order) {
-        this.orders.add(order);
-        order.setCustomer(this);
-    }
-
-    public void removeOrder(Order order) {
-        this.orders.remove(order);
-        order.setCustomer(null);
-    }
 }

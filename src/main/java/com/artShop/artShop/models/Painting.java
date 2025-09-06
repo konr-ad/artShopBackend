@@ -2,61 +2,66 @@ package com.artShop.artShop.models;
 
 import com.artShop.artShop.enums.EPaintingState;
 import com.artShop.artShop.enums.EPaintingType;
-import com.artShop.artShop.models.payu.Order;
-import com.fasterxml.jackson.annotation.*;
+import com.artShop.artShop.models.base.BaseEntity;
+import com.artShop.artShop.models.media.MediaFile;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "paintings")
-@Data
+@Table(name = "paintings", indexes = {
+        @Index(name = "ix_paintings_type", columnList = "type"),
+        @Index(name = "ix_paintings_state", columnList = "state")
+})
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public class Painting {
+@ToString(exclude = {"media"})
+public class Painting extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @NotNull(message = "Name is required")
+    @NotBlank
+    @Column(nullable = false, length = 255)
     private String name;
-    @NotNull(message = "Type is required")
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
     private EPaintingType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private EPaintingState state;
-    @Positive(message = "Price should be positive")
-    private double price;
-    @Lob
+
+    @NotNull
+    @Positive
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal price;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String quantity;
-
-    @Lob
-    private byte[] image;
-
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    @JsonBackReference
-    private Order order;
+    @PositiveOrZero
+    @Column(nullable = false)
+    private int quantity = 1;
 
     @OneToMany(mappedBy = "painting", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<AdditionalImage> additionalImages = new ArrayList<>();
+    @OrderBy("isPrimary DESC, sortOrder ASC, id ASC")
+    private List<MediaFile> media = new ArrayList<>();
 
-    public void addAdditionalImage(AdditionalImage additionalImage) {
-        additionalImages.add(additionalImage);
-        additionalImage.setPainting(this);
-    }
-
-    public void removeAdditionalImage(AdditionalImage additionalImage) {
-        additionalImages.remove(additionalImage);
-        additionalImage.setPainting(null);
+    public void addMedia(MediaFile mf, boolean primary, int sortOrder) {
+        mf.setPainting(this);
+        mf.setPrimary(primary);
+        mf.setSortOrder(sortOrder);
+        media.add(mf);
     }
 }
+

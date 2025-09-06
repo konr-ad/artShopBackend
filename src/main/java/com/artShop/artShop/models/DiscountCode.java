@@ -1,31 +1,46 @@
 package com.artShop.artShop.models;
 
 import com.artShop.artShop.enums.EDiscountType;
+import com.artShop.artShop.models.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Data
-@Table(name = "discount_code")
-public class DiscountCode {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(nullable = false, unique = true)
+@Table(name = "discount_code", indexes = {
+        @Index(name="ix_discount_active_to", columnList="is_active, valid_to")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+public class DiscountCode extends BaseEntity {
+    @Column(nullable=false, unique=true, length=64)
     private String code;
-    private EDiscountType discountType;
-    @Column(nullable = false)
-    private BigDecimal discountValue;
-    private BigDecimal minimumOrderValue;
-    @Column(nullable = false)
-    private int usageLimit;
-    private int timesUsed;
-    private boolean isActive;
-    private LocalDate validTo;
-    private LocalDate validFrom;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length=32)
+    private EDiscountType discountType;
+
+    @Column(nullable=false, precision=12, scale=2)
+    private BigDecimal discountValue;
+
+    @Column(precision=12, scale=2)
+    private BigDecimal minimumOrderValue;
+
+    @Column(nullable=false)
+    private int usageLimit;
+
+    @Column(nullable=false)
+    private int timesUsed;
+
+    @Column(name = "is_active", nullable=false)
+    private boolean active;
+
+    private LocalDate validFrom;
+    private LocalDate validTo;
 }
