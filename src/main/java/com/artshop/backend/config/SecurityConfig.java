@@ -1,5 +1,7 @@
 package com.artshop.backend.config;
 
+import com.artshop.backend.security.JwtAuthFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +11,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -20,51 +25,34 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * Ustaw to per środowisko, np.:
-     * dev:     FRONTEND_ORIGIN=http://localhost:4200
-     * staging: FRONTEND_ORIGIN=https://staging.twoj-front.pl
-     * prod:    FRONTEND_ORIGIN=https://twoj-front.pl
-     * Możesz podać kilka, rozdzielając przecinkami.
-     */
+    private final JwtAuthFilter jwtAuthFilter;
+
     @Value("${app.frontend.origin}")
     private String frontendOriginsCsv;
 
     @Bean
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // REST = stateless
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // podstawowe nagłówki bezpieczeństwa
-                .headers(h -> h
-                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).preload(true))
-                        .frameOptions(f -> f.deny())
-                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-                )
-
-                // autoryzacja endpointów
                 .authorizeHttpRequests(reg -> reg
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/api/paintings/**").permitAll()
-
-                        .requestMatchers("/api/payu/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/checkout/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/orders/**").permitAll()
-
+                        // public
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health/**", "/actuator/info").permitAll()
-
+                        .requestMatchers(HttpMethod.GET, "/api/paintings/**").permitAll()
+                        // admin only
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        .anyRequest().permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+                        // pozostałe – wymagają byle jakiej autentykacji (token)
+                        .anyRequest().authenticated()
                 );
-
+        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
