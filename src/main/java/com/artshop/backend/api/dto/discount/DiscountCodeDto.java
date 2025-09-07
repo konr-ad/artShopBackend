@@ -1,4 +1,4 @@
-package com.artshop.backend.api.dto;
+package com.artshop.backend.api.dto.discount;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

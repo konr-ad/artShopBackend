@@ -2,7 +2,7 @@ package com.artshop.backend.controllers;
 
 import com.artshop.backend.models.payu.Order;
 import com.artshop.backend.services.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,26 +12,21 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
 
-    @Autowired
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
-
     @PostMapping
     public ResponseEntity<Map<String, String>> createOrder(@RequestBody Order order) {
-        Order processedOrder = orderService.processOrder(order);
+        Order processed = orderService.processOrder(order);
         Map<String, String> response = new HashMap<>();
-        response.put("redirectUri", processedOrder.getRedirectUri());
+        response.put("redirectUri", processed.getRedirectUri());
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Order>> getOrders() {
-        List<Order> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(orders);
-    }
+//    @GetMapping
+//    public ResponseEntity<List<Order>> getOrders() {
+//        return ResponseEntity.ok(orderService.getAllOrders());
+//    }
 }

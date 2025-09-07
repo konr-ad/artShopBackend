@@ -1,62 +1,56 @@
 package com.artshop.backend.services;
 
+import com.artshop.backend.api.dto.PaintingDetailsDto;
+import com.artshop.backend.api.dto.PaintingListDto;
+import com.artshop.backend.api.mapper.PaintingMapper;
+import com.artshop.backend.enums.EPaintingState;
 import com.artshop.backend.enums.EPaintingType;
 import com.artshop.backend.models.entity.Painting;
 import com.artshop.backend.repositories.PaintingRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.List;
+import java.math.BigDecimal;
 
 @Service
+@RequiredArgsConstructor
 public class PaintingService {
 
     private final PaintingRepository paintingRepository;
+    private final PaintingMapper paintingMapper;
 
-    @Autowired
-    public PaintingService(PaintingRepository paintingRepository){
-        this.paintingRepository = paintingRepository;
+    public Page<PaintingListDto> list(EPaintingType type,
+                                      EPaintingState state,
+                                      BigDecimal minPrice,
+                                      BigDecimal maxPrice,
+                                      String query,
+                                      Pageable pageable) {
+
+        Page<Painting> page;
+
+        if (query != null && !query.isBlank()) {
+            page = paintingRepository.findAllByNameContainingIgnoreCase(query.trim(), pageable);
+        } else if (minPrice != null && maxPrice != null) {
+            page = paintingRepository.findAllByPriceBetween(minPrice, maxPrice, pageable);
+        } else if (type != null && state != null) {
+            page = paintingRepository.findAllByTypeAndState(type, state, pageable);
+        } else if (type != null) {
+            page = paintingRepository.findAllByType(type, pageable);
+        } else if (state != null) {
+            page = paintingRepository.findAllByState(state, pageable);
+        } else {
+            page = paintingRepository.findAll(pageable);
+        }
+
+        return page.map(paintingMapper::toListDto);
     }
 
-    public Painting findById(Long id) {
-        return paintingRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Painting with id: " + id + " not found"));
-    }
-
-
-    public void deleteById(Long id) {
-        findById(id);
-        paintingRepository.deleteById(id);
-    }
-
-    public Painting update(Painting updatedPainting) {
-        Painting existingPainting = findById(updatedPainting.getId());
-        updatePaintingFields(existingPainting, updatedPainting);
-        return paintingRepository.save(existingPainting);
-    }
-
-    private void updatePaintingFields(Painting existingPainting, Painting updatedPainting) {
-        existingPainting.setState(updatedPainting.getState());
-        existingPainting.setType(updatedPainting.getType());
-        existingPainting.setPrice(updatedPainting.getPrice());
-        existingPainting.setDescription(updatedPainting.getDescription());
-    }
-
-    public List<Painting> findAll() {
-        return paintingRepository.findAll();
-    }
-
-    public Painting createPainting(String type, String name, String description, double price, MultipartFile image) throws IOException {
-        Painting painting = new Painting();
-        painting.setType(EPaintingType.valueOf(type));
-        painting.setName(name);
-        painting.setDescription(description);
-        painting.setPrice(price);
-        painting.setImage(image.getBytes());
-
-        return paintingRepository.save(painting);
+    public PaintingDetailsDto getDetails(Long id) {
+        return paintingRepository.findByIdWithMedia(id)
+                .map(paintingMapper::toDetailsDto)
+                .orElseThrow(() -> new EntityNotFoundException("Painting id=" + id + " not found"));
     }
 }

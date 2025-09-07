@@ -1,6 +1,6 @@
 package com.artshop.backend.api.mapper;
 
-import com.artshop.backend.api.dto.DiscountCodeDto;
+import com.artshop.backend.api.dto.discount.DiscountCodeDto;
 import com.artshop.backend.models.entity.DiscountCode;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

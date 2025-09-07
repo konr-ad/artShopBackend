@@ -1,29 +1,24 @@
 package com.artshop.backend.services;
 
-import com.artshop.backend.enums.EPaintingType;
+import com.artshop.backend.exception.EntityNotFoundException;
 import com.artshop.backend.models.entity.Customer;
-import com.artshop.backend.models.entity.Painting;
 import com.artshop.backend.models.payu.Order;
+import com.artshop.backend.models.payu.OrderItem;
 import com.artshop.backend.repositories.CustomerRepository;
 import com.artshop.backend.repositories.OrderRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class OrderService {
 
@@ -43,119 +38,134 @@ public class OrderService {
     private final RestTemplate restTemplate;
     private final CustomerRepository customerRepository;
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
-    @Autowired
-    public OrderService(OrderRepository orderRepository, RestTemplate restTemplate, CustomerRepository customerRepository) {
-        this.orderRepository = orderRepository;
-        this.restTemplate = restTemplate;
-        this.customerRepository = customerRepository;
-    }
-
+    /**
+     * Zostaje Twój flow:
+     * - ogarniamy klienta
+     * - przypinamy pozycje do zamówienia
+     * - zapis do DB
+     * - token PayU -> create order -> update redirectUri/payuOrderId
+     */
     public Order processOrder(Order order) {
+        // 1) Customer reuse albo utworzenie
         Customer customer = order.getCustomer();
         if (customer != null) {
             if (customer.getId() == null || !customerRepository.existsById(customer.getId())) {
-                Customer existingCustomer = customerRepository.findByEmail(customer.getEmail());
-                if (existingCustomer != null) {
-                    customer = existingCustomer;
+                Optional<Customer> existing = customerRepository.findByEmail(customer.getEmail());
+                if (existing.isPresent()) {
+                    customer = existing.get();
                 } else {
-                    customer.addOrder(order);
                     customer = customerRepository.save(customer);
                 }
+            }
+        } else {
+            // jeśli przychodzi tylko email kontaktowy, a nie obiekt customer – możesz dodać prostą logikę
+            if (order.getContactEmail() != null && !order.getContactEmail().isBlank()) {
+                customer = customerRepository.findFirstByEmailOrderByIdDesc(order.getContactEmail())
+                        .orElseGet(() -> {
+                            Customer c = new Customer();
+                            c.setEmail(order.getContactEmail());
+                            return customerRepository.save(c);
+                        });
             } else {
-                customer.addOrder(order);
+                throw new EntityNotFoundException("Missing customer or contactEmail");
             }
         }
         order.setCustomer(customer);
 
-        if (order.getPaintings() != null && !order.getPaintings().isEmpty()) {
-            List<Painting> paintings = order.getPaintings();
-
-            // Ensure that each painting has the correct order set
-            paintings.forEach(painting -> painting.setOrder(order));
-
-            // Set the paintings to the order
-            order.setPaintings(paintings);
+        // 2) Przypnij pozycje do zamówienia (nowy model: OrderItem)
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            for (OrderItem it : order.getItems()) {
+                it.setOrder(order);
+                if (it.getQuantity() <= 0) it.setQuantity(1);
+            }
+        } else {
+            throw new IllegalArgumentException("Order has no items");
         }
 
-        // Save the order
+        // 3) Ustal sumę jeśli nie ustawiona (BigDecimal PLN)
+        if (order.getTotalAmount() == null) {
+            BigDecimal total = order.getItems().stream()
+                    .map(OrderItem::lineTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            order.setTotalAmount(total);
+        }
+
+        // 4) Zapisz zamówienie (status NEW/PENDING ustawiasz wg swojego enum)
         Order savedOrder = orderRepository.save(order);
 
-        // Continue with PayU integration
+        // 5) PayU
         String token = getAuthToken();
         Map<String, Object> response = createOrderInPayU(savedOrder, token);
 
-        // Extract and update necessary information from the response
+        // 6) Update pól z odpowiedzi PayU
         savedOrder.setPayuOrderId((String) response.get("orderId"));
         savedOrder.setRedirectUri((String) response.get("redirectUri"));
-        savedOrder.setPaymentStatus((String) ((Map) response.get("status")).get("statusCode")); //to nie jest paymentStatus
-        logger.info("response.get(\"status\"): {}", response.get("status"));
-        logger.info("response.get(\"status\"): {}", response.get("statusCode"));
-        // Save updated order to the database
+        // jeśli chcesz mapować status: savedOrder.setPaymentStatus(EPaymentStatus.PENDING);
+
+        log.info("PayU response status: {}", response.get("status"));
+
         return orderRepository.save(savedOrder);
     }
+
+    // --- poniżej Twoje metody integracji PayU, zachowane w duchu 1:1 ---
 
     public String getAuthToken() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "client_credentials");
-        body.add("client_id", clientId);
-        body.add("client_secret", clientSecret);
+        Map<String, String> body = new LinkedHashMap<>();
+        body.put("grant_type", "client_credentials");
+        body.put("client_id", clientId);
+        body.put("client_secret", clientSecret);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(authUrl, request, Map.class);
-
-        return response.getBody().get("access_token").toString();
+        return Objects.requireNonNull(response.getBody()).get("access_token").toString();
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> createOrderInPayU(Order order, String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(token);
 
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
+        // TODO: przenieś do konfiguracji/profili
         body.put("continueUrl", "http://localhost:4200/thankyou");
-        body.put("notifyUrl", "http://localhost:4200/notify");
+        body.put("notifyUrl",   "http://localhost:4200/notify");
         body.put("customerIp", "127.0.0.1");
         body.put("merchantPosId", "482430");
-        body.put("description", order.getDescription());
-        body.put("currencyCode", order.getCurrencyCode());
-        body.put("totalAmount", order.getTotalAmount());
-        body.put("extOrderId", order.getExtOrderId());
 
-        Map<String, String> buyer = new HashMap<>();
-        buyer.put("email", order.getCustomer().getEmail());
-        buyer.put("firstName", order.getCustomer().getFirstName());
-        buyer.put("lastName", order.getCustomer().getLastName());
+        body.put("description", "testowyOpisDoZMiany");//order.getDescription());
+        body.put("currencyCode", order.getCurrencyCode());
+        // PayU wymaga stringa w groszach:
+        body.put("totalAmount", order.getTotalAmount().movePointRight(2).toBigInteger().toString());
+        if (order.getExtOrderId() != null) body.put("extOrderId", order.getExtOrderId());
+
+        Map<String, String> buyer = new LinkedHashMap<>();
+        // preferuj contactEmail (dodałeś do Order)
+        String email = order.getContactEmail() != null ? order.getContactEmail()
+                : (order.getCustomer() != null ? order.getCustomer().getEmail() : "");
+        buyer.put("email", email);
+        if (order.getCustomer() != null) {
+            buyer.put("firstName", Optional.ofNullable(order.getCustomer().getFirstName()).orElse(""));
+            buyer.put("lastName",  Optional.ofNullable(order.getCustomer().getLastName()).orElse(""));
+        }
         body.put("buyer", buyer);
 
         List<Map<String, String>> products = new ArrayList<>();
-        if (order.getPaintings() != null) {
-            for (Painting painting : order.getPaintings()) {
-                String quantity = "1";
-                Map<String, String> product = new HashMap<>();
-                product.put("name", painting.getName());
-                product.put("unitPrice", String.valueOf((int) Math.round(painting.getPrice() * 100)));
-                if (painting.getType().equals(EPaintingType.PRINT)) {
-                    quantity = painting.getQuantity();
-                }
-                product.put("quantity", quantity);
-                products.add(product);
-            }
+        for (OrderItem it : order.getItems()) {
+            Map<String, String> product = new LinkedHashMap<>();
+            product.put("name", it.getPaintingNameSnapshot());
+            product.put("unitPrice", it.getUnitPriceAtPurchase().movePointRight(2).toBigInteger().toString());
+            product.put("quantity", String.valueOf(it.getQuantity()));
+            products.add(product);
         }
         body.put("products", products);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
         ResponseEntity<Map> response = restTemplate.postForEntity(orderUrl, request, Map.class);
         return response.getBody();
-    }
-
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
     }
 }

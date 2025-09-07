@@ -1,58 +1,57 @@
 package com.artshop.backend.controllers;
 
-import com.artshop.backend.Utils.ValidationUtils;
-import com.artshop.backend.api.dto.DiscountCodeDto;
+import com.artshop.backend.api.dto.discount.DiscountCodeDto;
+import com.artshop.backend.api.dto.discount.DiscountCodeRequest;
+import com.artshop.backend.api.dto.discount.DiscountCodeResponse;
+import com.artshop.backend.api.mapper.DiscountCodeMapper;
 import com.artshop.backend.models.entity.DiscountCode;
 import com.artshop.backend.services.DiscountCodeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("api/discountcodes")
+@RequestMapping("/api/discountcodes")
+@RequiredArgsConstructor
 public class DiscountCodeController {
 
     private final DiscountCodeService discountCodeService;
+    private final DiscountCodeMapper discountCodeMapper;
 
-    public DiscountCodeController(DiscountCodeService discountCodeService) {
-        this.discountCodeService = discountCodeService;
-    }
-
-    @GetMapping
-    public ResponseEntity<?> getAllDiscountCodes() {
-        List<DiscountCode> discountCodes = discountCodeService.findAll();
-        return new ResponseEntity<>(discountCodes, HttpStatus.OK);
-    }
-
-    @PostMapping("/add")
-    public ResponseEntity<?> addDiscountCode(@RequestBody DiscountCode discountCode, BindingResult result) {
-        ResponseEntity<?> errorMap = ValidationUtils.getResponseEntity(result);
-        if (errorMap != null) return errorMap;
-        DiscountCode newDiscountCode = discountCodeService.addDiscountCode(discountCode);
-        return new ResponseEntity<>(newDiscountCode, HttpStatus.CREATED);
-    }
-
+    // Public: walidacja kodu w koszyku
     @PostMapping("/validate")
-    public ResponseEntity<?> validateDiscountCode(@RequestBody DiscountCodeDto request, BindingResult result) {
-        ResponseEntity<?> errorMap = ValidationUtils.getResponseEntity(result);
-        if (errorMap != null) return errorMap;
-        DiscountCodeDto response = discountCodeService.validateDiscountCode(request);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public DiscountCodeResponse validate(@RequestBody DiscountCodeRequest request) {
+        return discountCodeService.validateDiscountCode(request);
     }
 
+    // Admin: listing wszystkich kodów (DTO encji)
+    @GetMapping
+    public List<DiscountCodeDto> listAll() {
+        return discountCodeService.findAll().stream()
+                .map(discountCodeMapper::toDto)
+                .toList();
+    }
+
+    // Admin: dodanie kodu (MVP – encja; można dodać osobne CreateDto)
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public DiscountCodeDto add(@RequestBody DiscountCode discountCode) {
+        return discountCodeMapper.toDto(discountCodeService.add(discountCode));
+    }
+
+    // Admin: kasowanie jednego
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDiscountCode(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOne(@PathVariable Long id) {
         discountCodeService.deleteById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteAllDiscountCodesById(@RequestBody List<Long> ids) {
-        discountCodeService.deleteById(ids);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    // Admin: kasowanie wielu
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMany(@RequestBody List<Long> ids) {
+        discountCodeService.deleteByIds(ids);
     }
-
 }
