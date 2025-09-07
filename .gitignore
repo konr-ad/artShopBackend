@@ -3,6 +3,7 @@
 /.mvn/
 /.idea/
 /workspace.xml
+artshop-backend.iml
 
 # Ignore the logs directory
 /logs/
