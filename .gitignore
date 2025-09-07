@@ -18,4 +18,6 @@ artshop-backend.iml
 /dataSources/
 /dataSources.local.xml
 
-/env.*.env
+# Env / sekrety
+env/
+*.env
