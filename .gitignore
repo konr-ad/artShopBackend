@@ -21,3 +21,5 @@ artshop-backend.iml
 # Env / sekrety
 env/
 *.env
+
+storage

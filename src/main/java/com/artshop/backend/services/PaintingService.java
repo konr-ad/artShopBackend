@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -22,13 +23,13 @@ public class PaintingService {
     private final PaintingRepository paintingRepository;
     private final PaintingMapper paintingMapper;
 
+    @Transactional(readOnly = true)
     public Page<PaintingListDto> list(EPaintingType type,
                                       EPaintingState state,
                                       BigDecimal minPrice,
                                       BigDecimal maxPrice,
                                       String query,
                                       Pageable pageable) {
-
         Page<Painting> page;
 
         if (query != null && !query.isBlank()) {
@@ -48,9 +49,10 @@ public class PaintingService {
         return page.map(paintingMapper::toListDto);
     }
 
+    @Transactional(readOnly = true)
     public PaintingDetailsDto getDetails(Long id) {
         return paintingRepository.findByIdWithMedia(id)
                 .map(paintingMapper::toDetailsDto)
-                .orElseThrow(() -> new EntityNotFoundException("Painting id=" + id + " not found"));
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Painting id=" + id + " not found"));
     }
 }

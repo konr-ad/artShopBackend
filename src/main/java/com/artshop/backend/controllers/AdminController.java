@@ -7,5 +7,7 @@ import java.util.Map;
 @RequestMapping("/api/admin")
 public class AdminController {
     @GetMapping("/ping")
-    public Map<String, String> ping() { return Map.of("status", "ok"); }
+    public Map<String, String> ping() {
+        return Map.of("status", "ok");
+    }
 }

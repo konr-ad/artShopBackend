@@ -9,6 +9,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +31,10 @@ public class PaintingController {
                                       @RequestParam(required = false) @PositiveOrZero BigDecimal minPrice,
                                       @RequestParam(required = false) @PositiveOrZero BigDecimal maxPrice,
                                       @RequestParam(required = false, name = "q") String query,
-                                      Pageable pageable) {
+                                      @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new IllegalArgumentException("minPrice cannot be greater than maxPrice");
+        }
         return paintingService.list(type, state, minPrice, maxPrice, query, pageable);
     }
 
