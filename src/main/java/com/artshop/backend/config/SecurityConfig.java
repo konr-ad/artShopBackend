@@ -36,7 +36,7 @@ public class SecurityConfig {
     private String frontendOriginsCsv;
 
     @Bean
-    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
