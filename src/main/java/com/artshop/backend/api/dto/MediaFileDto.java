@@ -5,5 +5,5 @@ public record MediaFileDto(
         String type,
         boolean isPrimary,
         int sortOrder,
-        String originalFilename)
-{ }
+        String originalFilename
+) {}

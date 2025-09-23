@@ -1,7 +1,7 @@
 package com.artshop.backend.api.mapper;
 
 import com.artshop.backend.api.dto.PaintingDetailsDto;
-import com.artshop.backend.api.dto.PaintingListDto;
+import com.artshop.backend.api.dto.PaintingListingDto;
 import com.artshop.backend.models.entity.Painting;
 import com.artshop.backend.models.media.MediaFile;
 import org.mapstruct.*;
@@ -18,7 +18,7 @@ public interface PaintingMapper {
             @Mapping(target = "state", expression = "java(p.getState() != null ? p.getState().name() : null)"),
             @Mapping(target = "thumbnailUrl", source = "media", qualifiedByName = "primaryUrl")
     })
-    PaintingListDto toListDto(Painting p);
+    PaintingListingDto toListDto(Painting p);
 
     // Szczegóły – pełny DTO z listą mediów
     @Mappings({
