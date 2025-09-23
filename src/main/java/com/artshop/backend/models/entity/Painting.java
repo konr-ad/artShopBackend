@@ -47,7 +47,10 @@ public class Painting extends BaseEntity {
     private BigDecimal price;
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String descriptionPl;
+
+    @Column(columnDefinition = "TEXT")
+    private String descriptionEn;
 
     @PositiveOrZero
     @Column(nullable = false)

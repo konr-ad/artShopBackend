@@ -8,10 +8,15 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
+/**
+        * Trafia jako JSON w części multipart @RequestPart("meta")
+ */
 public record CreatePaintingRequest(
         @NotBlank String name,
         @NotNull EPaintingType type,
         EPaintingState state,
         @NotNull @Positive BigDecimal price,
-        String description
+        String descriptionPl,
+        String descriptionEn,
+        Integer quantity
 ) {}

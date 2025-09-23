@@ -9,7 +9,8 @@ public record PaintingDetailsDto(
         String type,
         String state,
         BigDecimal price,
-        String description,
+        String descriptionPl,
+        String descriptionEn,
         int quantity,
         List<MediaFileDto> media
 ) {}

@@ -1,17 +1,24 @@
+// src/main/java/com/artshop/backend/controllers/AdminPaintingController.java
 package com.artshop.backend.controllers;
 
 import com.artshop.backend.api.dto.CreatePaintingRequest;
 import com.artshop.backend.api.dto.PaintingDetailsDto;
 import com.artshop.backend.api.mapper.PaintingMapper;
+import com.artshop.backend.enums.EMediaImageType;
 import com.artshop.backend.models.entity.Painting;
+import com.artshop.backend.models.media.MediaFile;
+import com.artshop.backend.repositories.MediaFileRepository;
 import com.artshop.backend.repositories.PaintingRepository;
+import com.artshop.backend.services.MediaStorage;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin/paintings")
@@ -19,20 +26,59 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminPaintingController {
 
     private final PaintingRepository paintingRepo;
+    private final MediaFileRepository mediaRepo;
     private final PaintingMapper mapper;
+    private final MediaStorage storage;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public PaintingDetailsDto create(@Valid @RequestBody CreatePaintingRequest req) {
+    @Transactional
+    public PaintingDetailsDto createWithMedia(
+            @RequestPart("meta") @Valid CreatePaintingRequest meta, // <- wymaga application/json dla tej części!
+            @RequestPart("files") List<MultipartFile> files,
+            @RequestParam(value = "primaryIndex", required = false) Integer primaryIndex
+    ) throws Exception {
+        // 1) Utwórz i zapisz Painting
         Painting p = new Painting();
-        p.setName(req.name());
-        p.setType(req.type());
-        p.setState(req.state());
-        p.setPrice(req.price());
-        p.setDescription(req.description());
-        p.setQuantity(1);
+        p.setName(meta.name());
+        p.setType(meta.type());
+        p.setState(meta.state());
+        p.setPrice(meta.price());
+        p.setDescriptionPl(meta.descriptionPl());
+        p.setDescriptionEn(meta.descriptionEn());
+        p.setQuantity(meta.quantity() != null ? meta.quantity() : 1);
 
         Painting saved = paintingRepo.save(p);
+
+        // 2) Upload mediów (opcjonalnie)
+        if (files != null && !files.isEmpty()) {
+            int prim = (primaryIndex != null && primaryIndex >= 0 && primaryIndex < files.size()) ? primaryIndex : 0;
+
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile f = files.get(i);
+
+                // zapis fizyczny + URL
+                String url = storage.savePaintingFile(saved.getId(), f);
+
+                MediaFile mf = new MediaFile();
+                mf.setPainting(saved);
+                mf.setUrl(url);
+                mf.setType(detectImageType(f)); // JPEG/PNG itp.
+                mf.setPrimary(i == prim);
+                mf.setSortOrder(i);
+                mf.setOriginalFilename(f.getOriginalFilename());
+
+                mediaRepo.save(mf);
+            }
+        }
+
+        // 3) Wróć DTO z mediami
+        // jeśli masz metodę repo dociągającą media, użyj jej; w prostym wariancie mapper na 'saved'
         return mapper.toDetailsDto(saved);
+    }
+
+    private EMediaImageType detectImageType(MultipartFile f) {
+        String ct = Optional.ofNullable(f.getContentType()).orElse("").toLowerCase();
+        return ct.contains("png") ? EMediaImageType.PNG : EMediaImageType.JPEG;
     }
 }

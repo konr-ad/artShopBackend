@@ -12,7 +12,6 @@ import java.util.List;
 @Mapper(config = MapStructConfig.class, uses = { MediaFileMapper.class })
 public interface PaintingMapper {
 
-    // Listing – lekki DTO z miniaturą (URL z primary media)
     @Mappings({
             @Mapping(target = "type", expression = "java(p.getType().name())"),
             @Mapping(target = "state", expression = "java(p.getState() != null ? p.getState().name() : null)"),
@@ -20,10 +19,11 @@ public interface PaintingMapper {
     })
     PaintingListingDto toListDto(Painting p);
 
-    // Szczegóły – pełny DTO z listą mediów
     @Mappings({
             @Mapping(target = "type", expression = "java(p.getType().name())"),
-            @Mapping(target = "state", expression = "java(p.getState() != null ? p.getState().name() : null)")
+            @Mapping(target = "state", expression = "java(p.getState() != null ? p.getState().name() : null)"),
+            @Mapping(target = "descriptionPl", source = "descriptionPl"),
+            @Mapping(target = "descriptionEn", source = "descriptionEn")
     })
     PaintingDetailsDto toDetailsDto(Painting p);
 
