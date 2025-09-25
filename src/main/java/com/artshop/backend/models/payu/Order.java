@@ -13,11 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(indexes = {
-        @Index(name = "ix_orders_customer", columnList = "customer_id"),
-        @Index(name = "ix_orders_status_created", columnList = "payment_status, created_at"),
-        @Index(name = "ix_orders_contact_email", columnList = "contact_email")
-})
+@Table(
+        name = "orders",
+        indexes = {
+                @Index(name = "ix_orders_customer", columnList = "customer_id"),
+                @Index(name = "ix_orders_status_created", columnList = "payment_status, created_at"),
+                @Index(name = "ix_orders_contact_email", columnList = "contact_email")
+        }
+)
 @Getter
 @Setter
 public class Order extends BaseEntity {
