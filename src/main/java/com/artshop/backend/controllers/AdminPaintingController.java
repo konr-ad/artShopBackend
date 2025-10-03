@@ -34,7 +34,7 @@ public class AdminPaintingController {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public PaintingDetailsDto createWithMedia(
-            @RequestPart("meta") @Valid CreatePaintingRequest meta, // <- wymaga application/json dla tej części!
+            @RequestPart("meta") @Valid CreatePaintingRequest meta,
             @RequestPart("files") List<MultipartFile> files,
             @RequestParam(value = "primaryIndex", required = false) Integer primaryIndex
     ) throws Exception {

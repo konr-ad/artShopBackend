@@ -20,10 +20,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    @Value("${app.security.admin.username}")
+    @Value("${app.security.admin.username:ADMIN_USER}")
     private String adminUsername;
 
-    @Value("${app.security.admin.password-hash}")
+    @Value("${app.security.admin.password-hash:ADMIN_PASSWORD_HASH}")
     private String adminPasswordHash;
 
     private final JwtService jwt;

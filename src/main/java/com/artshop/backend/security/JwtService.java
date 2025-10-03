@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
+    @Value("${app.jwt.secret:JWT_SECRET}")
     private String secretBase64;
 
     @Value("${app.jwt.exp-minutes:120}")

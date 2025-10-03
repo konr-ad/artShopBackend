@@ -32,7 +32,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    @Value("${app.frontend.origin}")
+    @Value("${app.frontend.origin:http://localhost:4200}")
     private String frontendOriginsCsv;
 
     @Bean
