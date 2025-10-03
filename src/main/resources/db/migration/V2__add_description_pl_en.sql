@@ -1,2 +1,5 @@
-ALTER TABLE paintings ADD COLUMN IF NOT EXISTS description_pl TEXT;
-ALTER TABLE paintings ADD COLUMN IF NOT EXISTS description_en TEXT;
+ALTER TABLE IF EXISTS paintings
+    ADD COLUMN IF NOT EXISTS description_pl TEXT;
+
+ALTER TABLE IF EXISTS paintings
+    ADD COLUMN IF NOT EXISTS description_en TEXT;
