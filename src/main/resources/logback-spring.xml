@@ -23,10 +23,10 @@
     </appender>
 
     <!-- Log level settings -->
-    <logger name="com.example" level="DEBUG"/>
+    <logger name="com.artshop.backend" level="DEBUG"/>
 
     <!-- Root logger configuration -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>

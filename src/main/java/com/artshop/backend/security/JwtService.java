@@ -3,6 +3,7 @@ package com.artshop.backend.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,9 +13,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class JwtService {
 
-    @Value("${app.jwt.secret:JWT_SECRET}")
+    @Value("${app.jwt.secret}")
     private String secretBase64;
 
     @Value("${app.jwt.exp-minutes:120}")

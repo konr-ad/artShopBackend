@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: artshop-backend
+    env_file:
+      - ./env/dev.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./storage:/app/storage
+    restart: unless-stopped
+    networks:
+      artshop-net:
+        aliases:
+          - artshop-api
+
+networks:
+  artshop-net:
+    external: true

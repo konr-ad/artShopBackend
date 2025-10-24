@@ -5,6 +5,7 @@ import com.artshop.backend.api.dto.PaintingListingDto;
 import com.artshop.backend.api.mapper.PaintingMapper;
 import com.artshop.backend.enums.EPaintingState;
 import com.artshop.backend.enums.EPaintingType;
+import com.artshop.backend.exception.EntityNotFoundException;
 import com.artshop.backend.models.entity.Painting;
 import com.artshop.backend.repositories.PaintingRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +55,17 @@ public class PaintingService {
         return paintingRepository.findByIdWithMedia(id)
                 .map(paintingMapper::toDetailsDto)
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Painting id=" + id + " not found"));
+    }
+
+    @Transactional
+    public boolean lockPaiting(Long id) {
+        Painting p = paintingRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Painting " + id + " not found"));
+        if (p.getState() != EPaintingState.AVAILABLE) {
+            return false;
+        }
+        p.setState(EPaintingState.RESERVED);
+        paintingRepository.save(p);
+        return true;
     }
 }

@@ -32,7 +32,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    @Value("${app.frontend.origin:http://localhost:4200}")
+    @Value("${app.frontend.origin}")
     private String frontendOriginsCsv;
 
     @Bean
@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/paintings/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/paintings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/payments/payu/notify").permitAll()

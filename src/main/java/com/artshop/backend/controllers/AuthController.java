@@ -2,6 +2,7 @@ package com.artshop.backend.controllers;
 
 import com.artshop.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +19,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
-    @Value("${app.security.admin.username:ADMIN_USER}")
+    @Value("${app.security.admin.username}")
     private String adminUsername;
 
-    @Value("${app.security.admin.password-hash:ADMIN_PASSWORD_HASH}")
+    @Value("${app.security.admin.password-hash}")
     private String adminPasswordHash;
 
     private final JwtService jwt;

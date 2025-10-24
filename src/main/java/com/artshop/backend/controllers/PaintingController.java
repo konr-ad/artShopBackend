@@ -7,19 +7,23 @@ import com.artshop.backend.enums.EPaintingType;
 import com.artshop.backend.services.PaintingService;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/paintings")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class PaintingController {
 
     private final PaintingService paintingService;
@@ -42,5 +46,18 @@ public class PaintingController {
     @GetMapping("/{id}")
     public PaintingDetailsDto details(@PathVariable Long id) {
         return paintingService.getDetails(id);
+    }
+
+    @PostMapping("/lock")
+    public ResponseEntity<List<Long>> lock(@RequestBody List<Long> ids) {
+        log.info("Zablokowano obrazy" + ids);
+        return ResponseEntity.ok(List.of(100000000L));
+    }
+
+    @PostMapping("/unlock")
+    public ResponseEntity<Void> unlock(@RequestBody List<Long> ids) {
+        paintingService.lockPaiting(ids.getFirst());
+        log.info("Odblokowano obrazy");
+        return ResponseEntity.ok().build();
     }
 }
