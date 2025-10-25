@@ -2,12 +2,16 @@ package com.artshop.backend.controllers;
 
 import com.artshop.backend.Utils.IpUtil;
 import com.artshop.backend.api.dto.CreateOrderRequest;
+import com.artshop.backend.api.dto.OrderDto;
+import com.artshop.backend.api.mapper.OrderMapper;
 import com.artshop.backend.services.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -16,6 +20,7 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderMapper orderMapper;
 
     @PostMapping
     public ResponseEntity<Map<String, String>> createOrder(
@@ -28,5 +33,13 @@ public class OrderController {
                 "redirectUri", processed.getRedirectUri(),
                 "orderId", processed.getId().toString()
         ));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<OrderDto> getOrders() {
+        return orderService.getAllOrders().stream()
+                .map(orderMapper::toDto)
+                .toList();
     }
 }

@@ -4,6 +4,7 @@ import com.artshop.backend.api.dto.AddressDto;
 import com.artshop.backend.api.dto.CreateOrderRequest;
 import com.artshop.backend.models.entity.Address;
 import com.artshop.backend.models.entity.Customer;
+import com.artshop.backend.models.payu.Order;
 import com.artshop.backend.repositories.CustomerRepository;
 import com.artshop.backend.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class OrderService {
     private final RestTemplate restTemplate;
 
     // NOWE: przetwarzanie z CreateOrderRequest
-    public com.artshop.backend.models.payu.Order processOrder(CreateOrderRequest req, String clientIp) {
+    public Order processOrder(CreateOrderRequest req, String clientIp) {
         // 1) Customer (re-use by e-mail)
         var email = Optional.ofNullable(req.contactEmail())
                 .orElseGet(() -> req.buyer() != null ? req.buyer().email() : null);
@@ -188,5 +189,9 @@ public class OrderService {
         a.setZip(dto.zip());
         a.setCountry(dto.country());
         return a;
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
     }
 }

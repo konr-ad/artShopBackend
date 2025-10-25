@@ -13,5 +13,6 @@ public record OrderDto(
         Instant createdAt,
         AddressDto shippingAddress,
         AddressDto billingAddress,
-        List<OrderItemDto> items
+        List<OrderItemDto> items,
+        CustomerDto customer
 ) {}
