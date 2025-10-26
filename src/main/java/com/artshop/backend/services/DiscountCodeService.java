@@ -1,7 +1,10 @@
 package com.artshop.backend.services;
 
+import com.artshop.backend.api.dto.discount.DiscountCodeCreateRequest;
+import com.artshop.backend.api.dto.discount.DiscountCodeDto;
 import com.artshop.backend.api.dto.discount.DiscountCodeRequest;
 import com.artshop.backend.api.dto.discount.DiscountCodeResponse;
+import com.artshop.backend.api.mapper.DiscountCodeMapper;
 import com.artshop.backend.exception.CodeNotFoundException;
 import com.artshop.backend.models.entity.DiscountCode;
 import com.artshop.backend.repositories.DiscountCodeRepository;
@@ -16,6 +19,7 @@ import java.util.List;
 public class DiscountCodeService {
 
     private final DiscountCodeRepository discountCodeRepository;
+    private final DiscountCodeMapper discountCodeMapper;
 
     public DiscountCodeResponse validateDiscountCode(DiscountCodeRequest req) {
         DiscountCode dc = discountCodeRepository.findByCode(req.code())
@@ -56,8 +60,10 @@ public class DiscountCodeService {
         discountCodeRepository.save(dc);
     }
 
-    // ADMIN CRUD (jak miałeś)
-    public DiscountCode add(DiscountCode dc) { return discountCodeRepository.save(dc); }
+    public DiscountCode add(DiscountCodeCreateRequest req) {
+        var entity = discountCodeMapper.toEntity(req);
+        return discountCodeRepository.save(entity);
+    }
     public List<DiscountCode> findAll() { return discountCodeRepository.findAll(); }
     public void deleteById(Long id) { discountCodeRepository.deleteById(id); }
     public void deleteByIds(List<Long> ids) { discountCodeRepository.deleteAllById(ids); }
