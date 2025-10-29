@@ -9,16 +9,19 @@ import com.artshop.backend.exception.EntityNotFoundException;
 import com.artshop.backend.models.entity.Painting;
 import com.artshop.backend.repositories.PaintingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaintingService {
 
     private final PaintingRepository paintingRepository;
@@ -58,14 +61,39 @@ public class PaintingService {
     }
 
     @Transactional
-    public boolean lockPaiting(Long id) {
-        Painting p = paintingRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Painting " + id + " not found"));
-        if (p.getState() != EPaintingState.AVAILABLE) {
-            return false;
+    public void lockPaintings(List<Long> ids) {
+        Painting p = null;
+        List<Long> lockedIds = new ArrayList<>();
+        for (Long id : ids) {
+            p = paintingRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Painting " + id + " not found"));
+            if (p.getState() != EPaintingState.AVAILABLE) {
+                continue;
+            }
+            p.setState(EPaintingState.RESERVED);
+            paintingRepository.save(p);
+            lockedIds.add(id);
         }
-        p.setState(EPaintingState.RESERVED);
-        paintingRepository.save(p);
-        return true;
+        log.info("Followings ids have been locked: {}", lockedIds);
+    }
+
+    public void unLockPaintings(List<Long> ids) {
+        Painting p = null;
+        List<Long> unLockedIds = new ArrayList<>();
+        for (Long id : ids) {
+            p = paintingRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Painting " + id + " not found"));
+            if (p.getState() == EPaintingState.AVAILABLE) {
+                continue;
+            }
+            p.setState(EPaintingState.AVAILABLE);
+            paintingRepository.save(p);
+            unLockedIds.add(id);
+        }
+        log.info("Followings ids have been unlocked: {}", unLockedIds);
+    }
+
+    public List<Painting> findAll() {
+        return paintingRepository.findAll();
     }
 }

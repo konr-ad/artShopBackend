@@ -3,6 +3,7 @@ package com.artshop.backend.controllers;
 
 import com.artshop.backend.api.dto.CreatePaintingRequest;
 import com.artshop.backend.api.dto.PaintingDetailsDto;
+import com.artshop.backend.api.dto.PaintingListingDto;
 import com.artshop.backend.api.mapper.PaintingMapper;
 import com.artshop.backend.enums.EMediaImageType;
 import com.artshop.backend.models.entity.Painting;
@@ -10,18 +11,22 @@ import com.artshop.backend.models.media.MediaFile;
 import com.artshop.backend.repositories.MediaFileRepository;
 import com.artshop.backend.repositories.PaintingRepository;
 import com.artshop.backend.services.MediaStorage;
+import com.artshop.backend.services.PaintingService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/paintings")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminPaintingController {
 
@@ -29,9 +34,9 @@ public class AdminPaintingController {
     private final MediaFileRepository mediaRepo;
     private final PaintingMapper mapper;
     private final MediaStorage storage;
+    private final PaintingService paintingService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public PaintingDetailsDto createWithMedia(
             @RequestPart("meta") @Valid CreatePaintingRequest meta,
@@ -80,5 +85,24 @@ public class AdminPaintingController {
     private EMediaImageType detectImageType(MultipartFile f) {
         String ct = Optional.ofNullable(f.getContentType()).orElse("").toLowerCase();
         return ct.contains("png") ? EMediaImageType.PNG : EMediaImageType.JPEG;
+    }
+
+    @GetMapping
+    public List<PaintingListingDto>getAllPaintings() {
+        return paintingService.findAll().stream()
+                .map(mapper::toListDto)
+                .toList();
+    }
+
+    @PostMapping("/lock")
+    public ResponseEntity<Void> lock(@RequestBody List<Long> ids) {
+        paintingService.lockPaintings(ids);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/unlock")
+    public ResponseEntity<Void> unlock(@RequestBody List<Long> ids) {
+        paintingService.unLockPaintings(ids);
+        return ResponseEntity.noContent().build();
     }
 }

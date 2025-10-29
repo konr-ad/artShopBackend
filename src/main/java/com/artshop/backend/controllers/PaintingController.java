@@ -48,16 +48,4 @@ public class PaintingController {
         return paintingService.getDetails(id);
     }
 
-    @PostMapping("/lock")
-    public ResponseEntity<List<Long>> lock(@RequestBody List<Long> ids) {
-        log.info("Zablokowano obrazy" + ids);
-        return ResponseEntity.ok(List.of(100000000L));
-    }
-
-    @PostMapping("/unlock")
-    public ResponseEntity<Void> unlock(@RequestBody List<Long> ids) {
-        paintingService.lockPaiting(ids.getFirst());
-        log.info("Odblokowano obrazy");
-        return ResponseEntity.ok().build();
-    }
 }

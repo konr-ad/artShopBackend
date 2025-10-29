@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +65,18 @@ public class DiscountCodeService {
         var entity = discountCodeMapper.toEntity(req);
         return discountCodeRepository.save(entity);
     }
-    public List<DiscountCode> findAll() { return discountCodeRepository.findAll(); }
+    public List<DiscountCode> findAll() {
+        LocalDate today = LocalDate.now();
+
+        return discountCodeRepository.findAll()
+                .stream()
+                .peek(dc -> {
+                    boolean isValidFrom = dc.getValidFrom() == null || !dc.getValidFrom().isAfter(today);
+                    boolean isValidTo = dc.getValidTo() == null || !dc.getValidTo().isBefore(today);
+                    dc.setActive(isValidFrom && isValidTo);
+                })
+                .collect(Collectors.toList());
+    }
     public void deleteById(Long id) { discountCodeRepository.deleteById(id); }
     public void deleteByIds(List<Long> ids) { discountCodeRepository.deleteAllById(ids); }
 }
