@@ -1,7 +1,7 @@
 package com.artshop.backend.api.dto.discount;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record DiscountCodeCreateRequest(
         String code,
@@ -9,7 +9,6 @@ public record DiscountCodeCreateRequest(
         BigDecimal discountValue,
         BigDecimal minimumOrderValue,
         boolean isActive,
-        int usageLimit,
-        LocalDate validFrom,
-        LocalDate validTo
+        LocalDateTime validFrom,
+        LocalDateTime validTo
 ) {}

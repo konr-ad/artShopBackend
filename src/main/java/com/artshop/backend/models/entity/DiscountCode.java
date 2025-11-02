@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "discount_code", indexes = {
@@ -40,6 +40,6 @@ public class DiscountCode extends BaseEntity {
     @Column(name = "is_active", nullable=false)
     private boolean isActive;
 
-    private LocalDate validFrom;
-    private LocalDate validTo;
+    private LocalDateTime validFrom;
+    private LocalDateTime validTo;
 }

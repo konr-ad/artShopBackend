@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,7 @@ public class DiscountCodeService {
         }
 
         // okno ważności (jeśli ustawione)
-        LocalDate today = LocalDate.now();
+        LocalDateTime today = LocalDateTime.now();
         if (dc.getValidFrom() != null && dc.getValidFrom().isAfter(today)) {
             return DiscountCodeResponse.invalid("Discount code not yet valid");
         }
@@ -66,11 +67,11 @@ public class DiscountCodeService {
     public DiscountCode add(DiscountCodeCreateRequest req) {
         DiscountCode entity = discountCodeMapper.toEntity(req);
 
-        LocalDate today = LocalDate.now();
+        LocalDateTime today = LocalDateTime.now();
         boolean isActive = true;
 
-        LocalDate from = req.validFrom();
-        LocalDate to = req.validTo();
+        LocalDateTime from = req.validFrom();
+        LocalDateTime to = req.validTo();
 
         if (from != null && today.isBefore(from)) {
             isActive = false; // jeszcze nie obowiązuje
@@ -86,7 +87,7 @@ public class DiscountCodeService {
         return discountCodeRepository.save(entity);
     }
     public List<DiscountCode> findAll() {
-        LocalDate today = LocalDate.now();
+        LocalDateTime today = LocalDateTime.now();
 
         return discountCodeRepository.findAll()
                 .stream()
