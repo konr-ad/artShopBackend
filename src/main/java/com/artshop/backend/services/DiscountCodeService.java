@@ -9,6 +9,7 @@ import com.artshop.backend.exception.CodeNotFoundException;
 import com.artshop.backend.models.entity.DiscountCode;
 import com.artshop.backend.repositories.DiscountCodeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DiscountCodeService {
 
@@ -53,7 +55,7 @@ public class DiscountCodeService {
             }
         }
 
-        return new DiscountCodeResponse(true, "OK", dc.getDiscountValue());
+        return new DiscountCodeResponse(true, "OK", dc.getDiscountValue(), dc.getDiscountType());
     }
 
     public void incrementUsage(DiscountCode dc) {
@@ -62,7 +64,25 @@ public class DiscountCodeService {
     }
 
     public DiscountCode add(DiscountCodeCreateRequest req) {
-        var entity = discountCodeMapper.toEntity(req);
+        DiscountCode entity = discountCodeMapper.toEntity(req);
+
+        LocalDate today = LocalDate.now();
+        boolean isActive = true;
+
+        LocalDate from = req.validFrom();
+        LocalDate to = req.validTo();
+
+        if (from != null && today.isBefore(from)) {
+            isActive = false; // jeszcze nie obowiązuje
+        }
+        if (to != null && today.isAfter(to)) {
+            isActive = false; // już po terminie
+        }
+
+        entity.setActive(isActive);
+        log.info("Discount code '{}' active={} (validFrom={}, validTo={}, today={})",
+                entity.getCode(), isActive, from, to, today);
+
         return discountCodeRepository.save(entity);
     }
     public List<DiscountCode> findAll() {
