@@ -15,6 +15,7 @@ import com.artshop.backend.services.PaintingService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,11 +23,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/paintings")
 @PreAuthorize("hasRole('ADMIN')")
+@Slf4j
 @RequiredArgsConstructor
 public class AdminPaintingController {
 
