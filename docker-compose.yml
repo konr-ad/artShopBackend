@@ -6,6 +6,8 @@ services:
     container_name: artshop-backend
     env_file:
       - ./env/dev.env
+    environment:
+      - TZ=Europe/Warsaw
     ports:
       - "8080:8080"
     volumes:

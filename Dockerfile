@@ -9,6 +9,7 @@ RUN mvn -q -DskipTests package
 # --- runtime ---
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+ENV TZ=Europe/Warsaw
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
