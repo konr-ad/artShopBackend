@@ -5,6 +5,7 @@ import com.artshop.backend.api.dto.CreateOrderRequest;
 import com.artshop.backend.models.entity.Address;
 import com.artshop.backend.models.entity.Customer;
 import com.artshop.backend.models.payu.Order;
+import com.artshop.backend.models.payu.OrderItem;
 import com.artshop.backend.repositories.CustomerRepository;
 import com.artshop.backend.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +37,7 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final RestTemplate restTemplate;
 
-    // NOWE: przetwarzanie z CreateOrderRequest
     public Order processOrder(CreateOrderRequest req, String clientIp) {
-        // 1) Customer (re-use by e-mail)
         var email = Optional.ofNullable(req.contactEmail())
                 .orElseGet(() -> req.buyer() != null ? req.buyer().email() : null);
 
@@ -58,7 +57,7 @@ public class OrderService {
                 });
 
         // 2) Encja Order
-        var order = new com.artshop.backend.models.payu.Order();
+        Order order = new Order();
         order.setCustomer(customer);
         order.setCurrencyCode(Optional.ofNullable(req.currencyCode()).orElse("PLN"));
         order.setExtOrderId(req.extOrderId());
@@ -74,7 +73,7 @@ public class OrderService {
             throw new IllegalArgumentException("Order has no products");
         }
         BigDecimal total = BigDecimal.ZERO;
-        for (var p : req.products()) {
+        for (CreateOrderRequest.ItemDto p : req.products()) {
             if (p.paintingId() == null) {
                 throw new IllegalArgumentException("Item.paintingId is required");
             }
@@ -82,7 +81,7 @@ public class OrderService {
                 throw new IllegalArgumentException("Item.paintingType is required");
             }
 
-            var it = new com.artshop.backend.models.payu.OrderItem();
+            OrderItem it = new OrderItem();
             it.setOrder(order);
             it.setPaintingId(p.paintingId());
             it.setPaintingNameSnapshot(p.name());
@@ -100,7 +99,7 @@ public class OrderService {
             it.setQuantity(Math.max(1, p.quantity()));
 
             order.getItems().add(it);
-            total = total.add(p.unitPrice().multiply(java.math.BigDecimal.valueOf(it.getQuantity())));
+            total = total.add(p.unitPrice().multiply(BigDecimal.valueOf(it.getQuantity())));
         }
         order.setTotalAmount(total);
 
@@ -113,12 +112,10 @@ public class OrderService {
 
         order.setPayuOrderId((String) payuResp.get("orderId"));
         order.setRedirectUri((String) payuResp.get("redirectUri"));
-        // order.setPaymentStatus(EPaymentStatus.PENDING);
 
         return orderRepository.save(order);
     }
 
-    // Token: x-www-form-urlencoded
     public String getAuthToken() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -135,7 +132,7 @@ public class OrderService {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> createOrderInPayU(
-            com.artshop.backend.models.payu.Order order,
+            Order order,
             String token,
             String clientIp
     ) {
@@ -147,15 +144,15 @@ public class OrderService {
         body.put("continueUrl", continueUrl);
         body.put("notifyUrl",   notifyUrl);
         body.put("customerIp",  Optional.ofNullable(clientIp).orElse("127.0.0.1"));
-        body.put("merchantPosId", clientId); // sandbox: to samo co clientId
+        body.put("merchantPosId", clientId);
 
         body.put("description", Optional.ofNullable(order.getItems())
                 .orElse(List.of())
-                .stream().map(com.artshop.backend.models.payu.OrderItem::getPaintingNameSnapshot)
+                .stream().map(OrderItem::getPaintingNameSnapshot)
                 .collect(Collectors.joining(" + ")));
 
         body.put("currencyCode", order.getCurrencyCode());
-        body.put("totalAmount", order.getTotalAmount().movePointRight(2).toBigInteger().toString()); // grosze
+        body.put("totalAmount", order.getTotalAmount().movePointRight(2).toBigInteger().toString());
         if (order.getExtOrderId() != null) body.put("extOrderId", order.getExtOrderId());
 
         Map<String, String> buyer = new LinkedHashMap<>();
