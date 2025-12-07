@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -28,6 +27,7 @@ public class PayuService {
 
     private final OrderRepository orderRepository;
     private final PaintingService paintingService;
+    private final NotificationService noticationService;
 
     public record NotifyOutcome(HttpStatus status, String message) {
         public static NotifyOutcome ok() {
@@ -51,19 +51,14 @@ public class PayuService {
     public NotifyOutcome handleNotify(Map<String, Object> payload, String signatureHeader) {
         log.debug("PayU notify payload: {}", payload);
 
-        // 1) (opcjonalnie) weryfikacja podpisu
         // if (!verifySignature(signatureHeader, payload)) { return NotifyOutcome.forbidden(); }
 
-        // 2) Parsowanie i walidacja payloadu
         var parsed = parseNotifyPayload(payload);
         if (!parsed.valid()) {
             log.warn("Invalid notify payload: {}", parsed.reason());
             return NotifyOutcome.bad(parsed.reason());
         }
 
-        // 3) Idempotencja – po PAYMENT_ID/txId (jeśli przechowujesz w Order)
-        // Zakładamy, że w encji Order masz np. pole: lastPayuPaymentId
-        // i sprawdzasz, czy to zdarzenie już było przetworzone.
         Optional<Order> opt = findOrder(parsed.extOrderId(), parsed.payuOrderId());
         if (opt.isEmpty()) {
             log.warn("Order not found for extOrderId={} / payuOrderId={}", parsed.extOrderId(), parsed.payuOrderId());
@@ -76,16 +71,13 @@ public class PayuService {
             return NotifyOutcome.ok();
         }
 
-        // 4) Aktualizacja stanu i akcje domenowe
         EPaymentStatus newStatus = mapPayuStatus(parsed.status());
         EPaymentStatus oldStatus = order.getPaymentStatus();
 
-        // Tylko gdy rzeczywiście zmieniamy stan
         if (!Objects.equals(oldStatus, newStatus)) {
             order.setPaymentStatus(newStatus);
         }
 
-        // Zablokuj obrazy tylko przy sukcesie (i jeśli wcześniej nie były zablokowane)
         if (newStatus == EPaymentStatus.COMPLETED) {
             List<Long> paintingIds = order.getItems().stream()
                     .map(OrderItem::getPaintingId)
@@ -97,14 +89,14 @@ public class PayuService {
         }
 
         orderRepository.save(order);
-
         log.info("Order {} updated to {} by PayU notify (extOrderId={}, payuOrderId={}, paymentId={})",
                 order.getId(), newStatus, parsed.extOrderId(), parsed.payuOrderId(), parsed.paymentId());
-
+        if (newStatus == EPaymentStatus.COMPLETED) {
+            noticationService.sendNewOrderAdminEmail(order);
+            noticationService.sendPaymentConfirmationCustomerEmail(order);
+        }
         return NotifyOutcome.ok();
     }
-
-    // ------- helpers -------
 
     private EPaymentStatus mapPayuStatus(String payuStatus) {
         if (payuStatus == null) return EPaymentStatus.PENDING;
@@ -188,7 +180,6 @@ public class PayuService {
         }
     }
 
-    // Docelowo: weryfikacja nagłówka OpenPayu-Signature (MD5/HMAC SHA-256 zależnie od konfiguracji)
     @SuppressWarnings("unused")
     private boolean verifySignature(String signatureHeader, Map<String, Object> payload) {
         return true;
