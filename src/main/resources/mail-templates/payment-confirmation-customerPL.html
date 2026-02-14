@@ -187,6 +187,7 @@
             <div class="brand">ArtShop</div>
             <div class="subtitle">Potwierdzenie płatności</div>
             <div class="title">Dziękujemy za Twoje zamówienie</div>
+            <div class="subtitle">bialkowskaismail.com</div>
         </div>
 
         <!-- CONTENT -->
@@ -196,7 +197,7 @@
                 <span th:if="${customerName != null}" th:text="' ' + ${customerName}">Kliencie</span>,
             </p>
             <p class="lead">
-                Płatność za zamówienie <strong th:text="${extOrderId}">ORD-XXXX</strong>
+                Płatność za zamówienie <strong th:text="${orderId}">ORD-XXXX</strong>
                 została pomyślnie zaksięgowana.
             </p>
 

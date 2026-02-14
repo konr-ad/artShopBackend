@@ -4,6 +4,7 @@ import com.artshop.backend.api.dto.PublicOrderStatusDto;
 import com.artshop.backend.models.payu.Order;
 import com.artshop.backend.services.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,14 +16,15 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/public/orders")
 @RequiredArgsConstructor
+@Slf4j
 public class PublicOrderController {
 
     private final OrderService orderService;
 
-    @GetMapping("/{extOrderId}/status")
-    public ResponseEntity<PublicOrderStatusDto> getOrderStatus(@PathVariable String extOrderId) {
-        Optional<Order> order = orderService.findByExtOrderId(extOrderId);
-        if (order == null) {
+    @GetMapping("/{orderId}/status")
+    public ResponseEntity<PublicOrderStatusDto> getOrderStatus(@PathVariable String orderId) {
+        Optional<Order> order = orderService.findbyId(orderId);
+        if (order.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 

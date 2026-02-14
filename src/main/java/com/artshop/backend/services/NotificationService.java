@@ -48,13 +48,13 @@ public class NotificationService {
             helper.setTo(new String[]{
                     toAddress1, toAddress2
             });
-            helper.setSubject("Nowe zamówienie – " + order.getExtOrderId());
+            helper.setSubject("Nowe zamówienie – " + order.getId());
 
             String createdAt = formatLocalDateTime(order.getCreatedAt());
             String frontendAddress = getFrontendAddress(frontendOrigins);
 
             Context context = new Context();
-            context.setVariable("extOrderId", order.getExtOrderId());
+            context.setVariable("orderId", order.getId());
             context.setVariable("totalAmount", order.getTotalAmount().toString());
             context.setVariable("itemCount", order.getItems().size());
             context.setVariable("orderCreateDate", createdAt);
@@ -80,14 +80,14 @@ public class NotificationService {
             helper.setTo(new String[]{
                     order.getCustomer().getEmail()
             });
-            helper.setSubject("Nowe zamówienie – " + order.getExtOrderId());
+            helper.setSubject("Nowe zamówienie – " + order.getId());
 
             String createdAt = formatLocalDateTime(order.getCreatedAt());
 
             Context context = new Context();
             context.setVariable("customerName", order.getCustomer().getFirstName());
             context.setVariable("items", order.getItems());
-            context.setVariable("extOrderId", order.getExtOrderId());
+            context.setVariable("orderId", order.getId());
             context.setVariable("totalAmount", order.getTotalAmount().toString());
             context.setVariable("itemCount", order.getItems().size());
             context.setVariable("orderCreateDate", createdAt);

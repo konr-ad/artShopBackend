@@ -195,4 +195,9 @@ public class OrderService {
     public Optional<Order> findByExtOrderId(String extOrderId) {
         return orderRepository.findByExtOrderId(extOrderId);
     }
+
+    public Optional<Order> findbyId(String orderId) {
+        Long orderIdInt = Long.valueOf(orderId);
+        return orderRepository.findById(orderIdInt);
+    }
 }
