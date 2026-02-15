@@ -92,7 +92,7 @@ public class NotificationService {
             context.setVariable("itemCount", order.getItems().size());
             context.setVariable("orderCreateDate", createdAt);
 
-            String html = templateEngine.process("payment-confirmation-customerPL", context);
+            String html = templateEngine.process("payment-confirmation-customer", context);
             helper.setText(html, true);
 
             mailSender.send(message);
